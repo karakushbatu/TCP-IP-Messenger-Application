@@ -18,6 +18,7 @@ class LogEntry:
     direction: str  # "Transmit" or "Receive"
     message_id: int | None
     is_auto: bool = False
+    is_periodic: bool = False
     is_warning: bool = False
     is_error: bool = False
     error_text: str | None = None
@@ -81,7 +82,11 @@ class MessageLog(ctk.CTkFrame):
             color = COLORS["error"]
             bg = COLORS["bg_tertiary"]
         else:
-            auto_tag = " [Otomatik]" if entry.is_auto else ""
+            auto_tag = ""
+            if entry.is_auto:
+                auto_tag = " [Otomatik]"
+            elif entry.is_periodic:
+                auto_tag = " [Periyodik]"
             msg_label = get_message_short_label(entry.message_id or 0)
             text = f"[{entry.timestamp}] {entry.direction} {msg_label}{auto_tag}"
             if entry.direction == "Transmit":

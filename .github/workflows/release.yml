@@ -48,13 +48,19 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Build macOS
+      - name: Build macOS (DMG + ZIP)
         run: bash build/build_macos.sh
 
-      - name: Upload macOS artifact
+      - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
-          name: TCP-Tactical-Messenger-macOS
+          name: TCP-Tactical-Messenger-macOS-dmg
+          path: dist/TCP-Tactical-Messenger-macOS.dmg
+
+      - name: Upload macOS ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: TCP-Tactical-Messenger-macOS-zip
           path: dist/TCP-Tactical-Messenger-macOS.zip
 
   build-windows:
@@ -96,5 +102,6 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            artifacts/TCP-Tactical-Messenger-macOS/TCP-Tactical-Messenger-macOS.zip
+            artifacts/TCP-Tactical-Messenger-macOS-dmg/TCP-Tactical-Messenger-macOS.dmg
+            artifacts/TCP-Tactical-Messenger-macOS-zip/TCP-Tactical-Messenger-macOS.zip
             artifacts/TCP-Tactical-Messenger-Windows/TCP-Tactical-Messenger-Windows.zip

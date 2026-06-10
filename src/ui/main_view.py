@@ -15,11 +15,19 @@ from src.network.handler import (
 from src.protocol.messages import Message
 from src.protocol.serializer import frame_payload
 from src.protocol.validator import build_message
+from src.ui.components import Card
 from src.ui.compose_form import ComposeForm
 from src.ui.message_log import LogEntry, MessageLog
 from src.ui.periodic_panel import PeriodicPanel
 from src.ui.status_bar import StatusBar
-from src.ui.theme import COLORS, FONT_SMALL
+from src.ui.theme import (
+    COLORS,
+    FONT_SMALL,
+    RADIUS,
+    style_button_primary,
+    style_button_secondary,
+    style_entry,
+)
 from src.utils.timestamp import format_timestamp
 
 
@@ -33,7 +41,15 @@ class InstancePanel(ctk.CTkFrame):
         on_log_select: Callable[[LogEntry], None] | None = None,
         on_toast: Callable[[str, str], None] | None = None,
     ) -> None:
-        super().__init__(master, fg_color=COLORS["bg_primary"], corner_radius=0)
+        super().__init__(
+            master,
+            fg_color=COLORS["bg_primary"],
+            corner_radius=RADIUS["lg"],
+            border_color=COLORS["border_subtle"],
+            border_width=1,
+        )
+        self.grid_rowconfigure(2, weight=1, minsize=200)
+        self.grid_columnconfigure(0, weight=1)
         self._on_log_select = on_log_select
         self._on_toast = on_toast
         self._send_fn: Callable[[Message, bool], bool] | None = None
@@ -41,46 +57,74 @@ class InstancePanel(ctk.CTkFrame):
         self._is_connected_fn: Callable[[], bool] = lambda: False
         self._auto_response_var = ctk.BooleanVar(value=True)
 
-        self.status_bar = StatusBar(self, title=title)
-        self.status_bar.pack(fill="x", padx=12, pady=(8, 4))
+        top = ctk.CTkFrame(self, fg_color="transparent")
+        top.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 0))
 
-        conn_frame = ctk.CTkFrame(self, fg_color=COLORS["bg_secondary"], corner_radius=8)
-        conn_frame.pack(fill="x", padx=12, pady=4)
+        self.status_bar = StatusBar(top, title=title)
+        self.status_bar.pack(fill="x")
 
-        self._conn_inner = ctk.CTkFrame(conn_frame, fg_color="transparent")
-        self._conn_inner.pack(fill="x", padx=12, pady=8)
+        self._conn_card = Card(top, title="Bağlantı Ayarları")
+        self._conn_card.pack(fill="x", pady=(6, 0))
+        self._conn_inner = self._conn_card.body
 
-        auto_frame = ctk.CTkFrame(self, fg_color="transparent")
-        auto_frame.pack(fill="x", padx=12, pady=2)
-
+        auto_row = ctk.CTkFrame(self._conn_card.body, fg_color="transparent")
+        auto_row.pack(fill="x", pady=(0, 4))
         self._auto_switch = ctk.CTkSwitch(
-            auto_frame,
+            auto_row,
             text="Otomatik Yanıt",
             variable=self._auto_response_var,
             command=self._on_auto_toggle,
+            progress_color=COLORS["accent_primary"],
+            button_color=COLORS["text_secondary"],
+            button_hover_color=COLORS["text_primary"],
         )
-        self._auto_switch.pack(side="left")
+        self._auto_switch.pack(anchor="w")
+        ctk.CTkLabel(
+            auto_row,
+            text=(
+                "Protokol demosu: gelen Mesaj 1'e otomatik Mesaj 2, "
+                "Mesaj 2'ye otomatik Mesaj 1 yanıtı üretilir."
+            ),
+            font=FONT_SMALL,
+            text_color=COLORS["text_tertiary"],
+            wraplength=360,
+            justify="left",
+        ).pack(anchor="w", pady=(2, 0))
+        ctk.CTkLabel(
+            auto_row,
+            text="Manuel test için kapatın; ping-pong döngüsünü önlemek için akıllı koruma vardır.",
+            font=FONT_SMALL,
+            text_color=COLORS["text_tertiary"],
+            wraplength=360,
+            justify="left",
+        ).pack(anchor="w", pady=(1, 0))
 
-        self.compose_form = ComposeForm(self)
-        self.compose_form.pack(fill="x", padx=12, pady=4)
+        compose_wrap = ctk.CTkFrame(self, fg_color="transparent")
+        compose_wrap.grid(row=1, column=0, sticky="ew", padx=4, pady=4)
+        self.compose_form = ComposeForm(compose_wrap)
+        self.compose_form.pack(fill="x")
         self.compose_form.set_send_callback(self._on_send)
 
         self.message_log = MessageLog(self, on_select=self._on_select_log)
-        self.message_log.pack(fill="both", expand=True, padx=12, pady=4)
+        self.message_log.grid(row=2, column=0, sticky="nsew", padx=4, pady=4)
 
         self.periodic_panel = PeriodicPanel(
             self,
             get_form_data=self._get_form_data_for_type,
-            send_callback=lambda msg: self._send_message(msg, is_auto=False),
+            send_callback=self._send_periodic_message,
             is_connected=self._is_connected_fn,
+            on_status=lambda msg: self._on_toast(msg, "warning") if self._on_toast else None,
         )
-        self.periodic_panel.pack(fill="x", padx=12, pady=(0, 8))
+        self.periodic_panel.grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 4))
 
-        test_frame = ctk.CTkFrame(self, fg_color=COLORS["bg_secondary"], corner_radius=8)
-        test_frame.pack(fill="x", padx=12, pady=(0, 8))
+        self._test_frame = ctk.CTkFrame(self, fg_color=COLORS["bg_secondary"], corner_radius=8)
+        self._test_frame.grid(row=4, column=0, sticky="ew", padx=4, pady=(0, 8))
+        self._test_expanded = False
 
-        test_header = ctk.CTkButton(
-            test_frame,
+        test_header = ctk.CTkFrame(self._test_frame, fg_color="transparent")
+        test_header.pack(fill="x", padx=8, pady=(6, 4))
+        self._test_toggle = ctk.CTkButton(
+            test_header,
             text="▶ Test Araçları",
             font=FONT_SMALL,
             fg_color="transparent",
@@ -88,26 +132,53 @@ class InstancePanel(ctk.CTkFrame):
             anchor="w",
             command=self._toggle_test,
         )
-        test_header.pack(anchor="w", padx=8, pady=4)
+        self._test_toggle.pack(side="left")
 
-        self._test_content = ctk.CTkFrame(test_frame, fg_color="transparent")
-        self._test_visible = False
+        self._test_body = ctk.CTkFrame(self._test_frame, fg_color="transparent")
+        test_row = ctk.CTkFrame(self._test_body, fg_color="transparent")
+        test_row.pack(fill="x", padx=8, pady=(0, 8))
 
-        ctk.CTkButton(
-            self._test_content,
-            text="Tanımsız Mesaj Gönder",
+        unknown_btn = ctk.CTkButton(
+            test_row,
+            text="Tanımsız Mesaj",
             fg_color=COLORS["warning"],
             hover_color="#D97706",
+            text_color=COLORS["bg_primary"],
+            corner_radius=RADIUS["md"],
+            height=28,
             command=self._send_unknown,
-        ).pack(side="left", padx=8, pady=8)
+        )
+        unknown_btn.pack(side="left", padx=(0, 8))
 
-        ctk.CTkButton(
-            self._test_content,
-            text="Bozuk Mesaj Gönder",
+        corrupt_btn = ctk.CTkButton(
+            test_row,
+            text="Bozuk Mesaj",
             fg_color=COLORS["error"],
             hover_color="#DC2626",
+            text_color=COLORS["bg_primary"],
+            corner_radius=RADIUS["md"],
+            height=28,
             command=self._send_corrupt,
-        ).pack(side="left", padx=8, pady=8)
+        )
+        corrupt_btn.pack(side="left")
+
+        ctk.CTkLabel(
+            self._test_body,
+            text="Tanımsız: geçersiz mesaj ID (99) gönderir · Bozuk: eksik/hatalı binary paket gönderir",
+            font=FONT_SMALL,
+            text_color=COLORS["text_tertiary"],
+            wraplength=420,
+            justify="left",
+        ).pack(anchor="w", padx=8, pady=(0, 8))
+
+    def _toggle_test(self) -> None:
+        self._test_expanded = not self._test_expanded
+        if self._test_expanded:
+            self._test_body.pack(fill="x")
+            self._test_toggle.configure(text="▼ Test Araçları")
+        else:
+            self._test_body.pack_forget()
+            self._test_toggle.configure(text="▶ Test Araçları")
 
     def set_title(self, title: str) -> None:
         self.status_bar.set_title(title)
@@ -141,17 +212,26 @@ class InstancePanel(ctk.CTkFrame):
     ) -> None:
         """Build connection control widgets based on server/client mode."""
         for child in self._conn_inner.winfo_children():
-            child.destroy()
+            if child is not self._auto_switch.master:
+                child.destroy()
+
+        grid = ctk.CTkFrame(self._conn_inner, fg_color="transparent")
+        grid.pack(fill="x", pady=(0, 2))
+        grid.columnconfigure(1, weight=1)
+        grid.columnconfigure(3, weight=1)
 
         if mode == "server":
-            ctk.CTkLabel(
-                self._conn_inner,
-                text="Port:",
-                text_color=COLORS["text_secondary"],
-            ).pack(side="left", padx=(0, 4))
-            port_entry = ctk.CTkEntry(self._conn_inner, width=80)
+            port_lbl = ctk.CTkLabel(
+                grid, text="Port", font=FONT_SMALL, text_color=COLORS["text_tertiary"]
+            )
+            port_lbl.grid(row=0, column=0, sticky="w", padx=(0, 8), pady=2)
+            port_entry = ctk.CTkEntry(grid, width=100, height=28)
+            style_entry(port_entry)
             port_entry.insert(0, "8080")
-            port_entry.pack(side="left", padx=(0, 8))
+            port_entry.grid(row=0, column=1, sticky="ew", padx=(0, 12), pady=2)
+
+            btn_row = ctk.CTkFrame(grid, fg_color="transparent")
+            btn_row.grid(row=1, column=0, columnspan=4, sticky="ew", pady=(6, 0))
 
             def start() -> None:
                 try:
@@ -162,39 +242,36 @@ class InstancePanel(ctk.CTkFrame):
                     if self._on_toast:
                         self._on_toast("Geçersiz port numarası", "error")
 
-            ctk.CTkButton(
-                self._conn_inner,
-                text="Sunucuyu Başlat",
-                fg_color=COLORS["accent_primary"],
-                command=start,
-            ).pack(side="left", padx=(0, 4))
+            start_btn = ctk.CTkButton(btn_row, text="Sunucuyu Başlat", height=28, command=start)
+            style_button_primary(start_btn)
+            start_btn.pack(side="left", padx=(0, 8))
 
             if on_stop_server:
-                ctk.CTkButton(
-                    self._conn_inner,
-                    text="Durdur",
-                    fg_color=COLORS["bg_tertiary"],
-                    command=on_stop_server,
-                ).pack(side="left")
-
+                stop_btn = ctk.CTkButton(
+                    btn_row, text="Sunucuyu Durdur", height=28, command=on_stop_server
+                )
+                style_button_secondary(stop_btn)
+                stop_btn.pack(side="left")
         else:
-            ctk.CTkLabel(
-                self._conn_inner,
-                text="IP:",
-                text_color=COLORS["text_secondary"],
-            ).pack(side="left", padx=(0, 4))
-            ip_entry = ctk.CTkEntry(self._conn_inner, width=120)
+            ctk.CTkLabel(grid, text="IP", font=FONT_SMALL, text_color=COLORS["text_tertiary"]).grid(
+                row=0, column=0, sticky="w", padx=(0, 8), pady=2
+            )
+            ip_entry = ctk.CTkEntry(grid, width=120, height=28)
+            style_entry(ip_entry)
             ip_entry.insert(0, "127.0.0.1")
-            ip_entry.pack(side="left", padx=(0, 8))
+            ip_entry.grid(row=0, column=1, sticky="ew", padx=(0, 12), pady=2)
 
-            ctk.CTkLabel(
-                self._conn_inner,
-                text="Port:",
-                text_color=COLORS["text_secondary"],
-            ).pack(side="left", padx=(0, 4))
-            port_entry = ctk.CTkEntry(self._conn_inner, width=80)
+            port_lbl = ctk.CTkLabel(
+                grid, text="Port", font=FONT_SMALL, text_color=COLORS["text_tertiary"]
+            )
+            port_lbl.grid(row=0, column=2, sticky="w", padx=(0, 8), pady=2)
+            port_entry = ctk.CTkEntry(grid, width=80, height=28)
+            style_entry(port_entry)
             port_entry.insert(0, "8080")
-            port_entry.pack(side="left", padx=(0, 8))
+            port_entry.grid(row=0, column=3, sticky="ew", pady=2)
+
+            btn_row = ctk.CTkFrame(grid, fg_color="transparent")
+            btn_row.grid(row=1, column=0, columnspan=4, sticky="ew", pady=(6, 0))
 
             def connect() -> None:
                 try:
@@ -205,20 +282,16 @@ class InstancePanel(ctk.CTkFrame):
                     if self._on_toast:
                         self._on_toast("Geçersiz port numarası", "error")
 
-            ctk.CTkButton(
-                self._conn_inner,
-                text="Bağlan",
-                fg_color=COLORS["accent_primary"],
-                command=connect,
-            ).pack(side="left", padx=(0, 4))
+            connect_btn = ctk.CTkButton(btn_row, text="Bağlan", height=28, command=connect)
+            style_button_primary(connect_btn)
+            connect_btn.pack(side="left", padx=(0, 8))
 
             if on_disconnect:
-                ctk.CTkButton(
-                    self._conn_inner,
-                    text="Bağlantıyı Kes",
-                    fg_color=COLORS["bg_tertiary"],
-                    command=on_disconnect,
-                ).pack(side="left")
+                disconnect_btn = ctk.CTkButton(
+                    btn_row, text="Bağlantıyı Kes", height=28, command=on_disconnect
+                )
+                style_button_secondary(disconnect_btn)
+                disconnect_btn.pack(side="left")
 
     def handle_network_event(self, event: NetworkEvent) -> None:
         """Process a network event and update UI."""
@@ -240,17 +313,13 @@ class InstancePanel(ctk.CTkFrame):
                         direction="Transmit",
                         message_id=info.message.message_id,
                         is_auto=info.is_auto,
+                        is_periodic=info.is_periodic,
                         message=info.message,
                         raw_timestamp=event.timestamp,
                     )
                 )
-                if info.is_auto:
-                    label = f"Mesaj {info.message.message_id}"
-                    if self._on_toast:
-                        self._on_toast(f"Otomatik yanıt gönderildi: {label}", "info")
-                else:
-                    if self._on_toast:
-                        self._on_toast("Mesaj gönderildi", "success")
+                if not info.is_auto and not info.is_periodic and self._on_toast:
+                    self._on_toast("Mesaj gönderildi", "success")
         elif event.type == "message_received":
             info = event.payload
             if isinstance(info, ReceivedMessageInfo) and info.message:
@@ -263,8 +332,6 @@ class InstancePanel(ctk.CTkFrame):
                         raw_timestamp=event.timestamp,
                     )
                 )
-                if self._on_toast:
-                    self._on_toast("Mesaj alındı", "info")
         elif event.type == "unknown_message":
             info = event.payload
             if isinstance(info, ReceivedMessageInfo):
@@ -294,7 +361,7 @@ class InstancePanel(ctk.CTkFrame):
                     )
                 )
                 if self._on_toast:
-                    self._on_toast("Hatalı mesaj alındı — çözümlenemedi", "error")
+                    self._on_toast("Hatalı mesaj alındı", "error")
 
     def _on_send(self) -> None:
         if not self.compose_form.is_valid():
@@ -311,6 +378,11 @@ class InstancePanel(ctk.CTkFrame):
         if self._send_fn:
             self._send_fn(message, is_auto)
 
+    def _send_periodic_message(self, message: Message) -> bool:
+        if self._send_fn:
+            return self._send_fn(message, is_auto=False, is_periodic=True)
+        return False
+
     def _get_form_data_for_type(self, message_id: int) -> dict[str, object]:
         current = self.compose_form.get_message_id()
         if current == message_id:
@@ -324,25 +396,16 @@ class InstancePanel(ctk.CTkFrame):
             self._on_log_select(entry)
 
     def _on_auto_toggle(self) -> None:
-        pass  # Handled by instance
-
-    def _toggle_test(self) -> None:
-        self._test_visible = not self._test_visible
-        if self._test_visible:
-            self._test_content.pack(fill="x")
-        else:
-            self._test_content.pack_forget()
+        pass
 
     def _send_unknown(self) -> None:
         if not self._send_raw_fn:
             return
         payload = struct.pack("!i", 99)
-        framed = frame_payload(payload)
-        self._send_raw_fn(framed)
+        self._send_raw_fn(frame_payload(payload))
 
     def _send_corrupt(self) -> None:
         if not self._send_raw_fn:
             return
         payload = struct.pack("!i", 1)[:2]
-        framed = frame_payload(payload)
-        self._send_raw_fn(framed)
+        self._send_raw_fn(frame_payload(payload))

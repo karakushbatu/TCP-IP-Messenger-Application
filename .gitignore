@@ -2,6 +2,7 @@
 venv/
 env/
 dist/
+dist-new/
 build/*
 !build/build_windows.bat
 !build/build_macos.sh

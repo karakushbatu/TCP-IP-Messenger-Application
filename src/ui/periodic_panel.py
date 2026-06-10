@@ -21,7 +21,7 @@ class PeriodicSender:
         self,
         message_id: int,
         get_form_data: Callable[[int], dict[str, object]],
-        send_callback: Callable[[Message], None],
+        send_callback: Callable[[Message], bool],
         is_connected: Callable[[], bool],
     ) -> None:
         self.message_id = message_id
@@ -74,10 +74,10 @@ class PeriodicSender:
                             else QUICK_FILL_MESSAGE_2
                         )
                         msg = build_message(self.message_id, defaults)
-                    self._send_callback(msg)
-                    self._sent_count += 1
-                    if self._on_update:
-                        self._on_update(self._sent_count, self.elapsed)
+                    if self._send_callback(msg):
+                        self._sent_count += 1
+                        if self._on_update:
+                            self._on_update(self._sent_count, self.elapsed)
                 except Exception:
                     pass
             time.sleep(self._interval_ms / 1000.0)
@@ -90,14 +90,16 @@ class PeriodicPanel(ctk.CTkFrame):
         self,
         master: ctk.CTkBaseClass,
         get_form_data: Callable[[int], dict[str, object]],
-        send_callback: Callable[[Message], None],
+        send_callback: Callable[[Message], bool],
         is_connected: Callable[[], bool],
+        on_status: Callable[[str], None] | None = None,
     ) -> None:
         super().__init__(master, fg_color=COLORS["bg_secondary"], corner_radius=8)
         self._get_form_data = get_form_data
         self._send_callback = send_callback
         self._is_connected = is_connected
-        self._expanded = True
+        self._on_status = on_status
+        self._expanded = False
         self._senders: dict[int, PeriodicSender] = {}
         self._indicators: dict[int, ctk.CTkLabel] = {}
         self._counters: dict[int, ctk.CTkLabel] = {}
@@ -110,7 +112,7 @@ class PeriodicPanel(ctk.CTkFrame):
 
         self._toggle_btn = ctk.CTkButton(
             header_row,
-            text="▼ Periyodik Gönderim",
+            text="▶ Periyodik Gönderim",
             font=("Segoe UI", 14, "bold"),
             fg_color="transparent",
             hover_color=COLORS["bg_hover"],
@@ -130,7 +132,14 @@ class PeriodicPanel(ctk.CTkFrame):
         stop_all.pack(side="right")
 
         self._content = ctk.CTkFrame(self, fg_color="transparent")
-        self._content.pack(fill="x", padx=12, pady=(0, 8))
+
+        ctk.CTkLabel(
+            self._content,
+            text="Bağlantı kurulduktan sonra anahtarı açın. Toast bildirimi gösterilmez.",
+            font=FONT_SMALL,
+            text_color=COLORS["text_tertiary"],
+            anchor="w",
+        ).pack(fill="x", pady=(0, 6))
 
         for msg_id, default_ms in [(1, 100), (2, 500)]:
             self._build_row(msg_id, default_ms)
@@ -154,7 +163,7 @@ class PeriodicPanel(ctk.CTkFrame):
             row,
             text="",
             width=40,
-            command=lambda mid=msg_id: self._on_toggle(mid),
+            command=lambda mid=msg_id: self.after_idle(lambda: self._on_toggle(mid)),
         )
         switch.pack(side="left", padx=4)
 
@@ -179,7 +188,10 @@ class PeriodicPanel(ctk.CTkFrame):
         elapsed.pack(side="left")
 
         sender = PeriodicSender(
-            msg_id, self._get_form_data, self._send_callback, self._is_connected
+            msg_id,
+            self._get_form_data,
+            self._send_callback,
+            lambda: self._is_connected(),
         )
 
         def update(count: int, elapsed_s: float, mid: int = msg_id) -> None:
@@ -201,7 +213,13 @@ class PeriodicPanel(ctk.CTkFrame):
     def _on_toggle(self, msg_id: int) -> None:
         switch = self._switches[msg_id]
         sender = self._senders[msg_id]
-        if switch.get():
+        enabled = int(switch.get()) == 1
+        if enabled:
+            if not self._is_connected():
+                switch.deselect()
+                if self._on_status:
+                    self._on_status("Periyodik gönderim için önce bağlantı kurun")
+                return
             try:
                 interval = int(self._interval_entries[msg_id].get())
             except ValueError:

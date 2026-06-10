@@ -20,19 +20,29 @@ pyinstaller --noconfirm --clean \
   src/main.py
 
 cd dist
+APP_NAME="TCP Tactical Messenger.app"
+VOLUME_NAME="TCP Tactical Messenger"
 
-if [[ -d "TCP Tactical Messenger.app" ]]; then
-  rm -f "TCP-Tactical-Messenger-macOS.zip"
-  zip -r "TCP-Tactical-Messenger-macOS.zip" "TCP Tactical Messenger.app"
-elif [[ -f "TCP Tactical Messenger" ]]; then
-  rm -f "TCP-Tactical-Messenger-macOS.zip"
-  zip -j "TCP-Tactical-Messenger-macOS.zip" "TCP Tactical Messenger"
-else
-  echo "ERROR: Expected app bundle or binary not found in dist/"
+if [[ ! -d "$APP_NAME" ]]; then
+  echo "ERROR: Expected $APP_NAME not found in dist/"
   ls -la
   exit 1
 fi
 
+echo "Creating DMG installer..."
+rm -f "TCP-Tactical-Messenger-macOS.dmg" "TCP-Tactical-Messenger-macOS.zip"
+
+# Primary macOS distribution: DMG
+hdiutil create \
+  -volname "$VOLUME_NAME" \
+  -srcfolder "$APP_NAME" \
+  -ov \
+  -format UDZO \
+  "TCP-Tactical-Messenger-macOS.dmg"
+
+# Optional ZIP fallback for automation-restricted environments
+zip -r "TCP-Tactical-Messenger-macOS.zip" "$APP_NAME"
+
 echo ""
 echo "Build complete:"
-ls -lh "TCP-Tactical-Messenger-macOS.zip"
+ls -lh "TCP-Tactical-Messenger-macOS.dmg" "TCP-Tactical-Messenger-macOS.zip"

@@ -73,6 +73,12 @@ class Instance:
     def handler(self) -> ConnectionHandler | None:
         return self._handler
 
+    @property
+    def is_connected(self) -> bool:
+        if self.mode == "server":
+            return self._server.is_connected if self._server else False
+        return self._client.is_connected if self._client else False
+
     def set_title(self, title: str) -> None:
         self.panel.set_title(title)
 
@@ -97,11 +103,15 @@ class Instance:
             return self.start_server(port)
         return self.connect(host, port)
 
-    def send_message(self, message: Message, is_auto: bool = False) -> bool:
+    def send_message(
+        self, message: Message, is_auto: bool = False, is_periodic: bool = False
+    ) -> bool:
         if self._handler:
-            if not is_auto:
+            if not is_auto and not is_periodic:
                 self._handler.auto_response_enabled = self.panel.get_auto_response_enabled()
-            return self._handler.send_message(message, is_auto=is_auto)
+            return self._handler.send_message(
+                message, is_auto=is_auto, is_periodic=is_periodic
+            )
         return False
 
     def send_raw(self, data: bytes) -> bool:

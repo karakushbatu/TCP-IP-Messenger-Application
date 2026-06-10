@@ -44,8 +44,6 @@ class InstanceManager:
         on_auto_connect: Callable[[Instance, Instance], None] | None = None,
     ) -> tuple[Instance, Instance | None]:
         """Set up demo instances based on mode."""
-        self.clear()
-
         if mode == "server_only":
             server = self._create_server_panel(parent, on_toast)
             return server, None

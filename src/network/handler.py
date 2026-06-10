@@ -41,6 +41,7 @@ class NetworkEvent:
 class SentMessageInfo:
     message: Message
     is_auto: bool = False
+    is_periodic: bool = False
 
 
 @dataclass
@@ -96,7 +97,9 @@ class ConnectionHandler:
         if was_connected:
             self._emit("disconnected", None)
 
-    def send_message(self, message: Message, is_auto: bool = False) -> bool:
+    def send_message(
+        self, message: Message, is_auto: bool = False, is_periodic: bool = False
+    ) -> bool:
         """Send a framed message over the connection."""
         with self._lock:
             if not self._socket or not self._running:
@@ -109,7 +112,10 @@ class ConnectionHandler:
                     self.auto_response_guard.mark_auto_sent()
                 else:
                     self.auto_response_guard.mark_manual_sent()
-                self._emit("message_sent", SentMessageInfo(message=message, is_auto=is_auto))
+                self._emit(
+                    "message_sent",
+                    SentMessageInfo(message=message, is_auto=is_auto, is_periodic=is_periodic),
+                )
                 return True
             except OSError as exc:
                 self._emit("error", str(exc))
