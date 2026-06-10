@@ -23,6 +23,7 @@ from src.ui.status_bar import StatusBar
 from src.ui.theme import (
     COLORS,
     FONT_SMALL,
+    MESSAGE_LOG_HEIGHT,
     RADIUS,
     style_button_primary,
     style_button_secondary,
@@ -54,7 +55,7 @@ class InstancePanel(ctk.CTkFrame):
             border_color=COLORS["border_subtle"],
             border_width=1,
         )
-        self.grid_rowconfigure(2, weight=1, minsize=72)
+        self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self._on_log_select = on_log_select
         self._on_toast = on_toast
@@ -65,8 +66,17 @@ class InstancePanel(ctk.CTkFrame):
         self._connection_mode: str | None = None
         self._auto_response_var = ctk.BooleanVar(value=True)
 
-        top = ctk.CTkFrame(self, fg_color="transparent")
-        top.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 0))
+        self._main_scroll = ctk.CTkScrollableFrame(
+            self,
+            fg_color=COLORS["bg_primary"],
+            corner_radius=0,
+            scrollbar_button_color=COLORS["bg_elevated"],
+            scrollbar_button_hover_color=COLORS["bg_hover"],
+        )
+        self._main_scroll.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+
+        top = ctk.CTkFrame(self._main_scroll, fg_color="transparent")
+        top.pack(fill="x", padx=2, pady=(2, 0))
 
         self.status_bar = StatusBar(top, title=title)
         self.status_bar.pack(fill="x")
@@ -99,17 +109,19 @@ class InstancePanel(ctk.CTkFrame):
         info_icon.pack(side="left", padx=(4, 0))
         ToolTip(info_icon, AUTO_REPLY_TOOLTIP)
 
-        compose_wrap = ctk.CTkFrame(self, fg_color="transparent")
-        compose_wrap.grid(row=1, column=0, sticky="ew", padx=4, pady=4)
+        compose_wrap = ctk.CTkFrame(self._main_scroll, fg_color="transparent")
+        compose_wrap.pack(fill="x", padx=2, pady=4)
         self.compose_form = ComposeForm(compose_wrap)
         self.compose_form.pack(fill="x")
         self.compose_form.set_send_callback(self._on_send)
 
-        self.message_log = MessageLog(self, on_select=self._on_select_log)
-        self.message_log.grid(row=2, column=0, sticky="nsew", padx=4, pady=4)
+        self.message_log = MessageLog(self._main_scroll, on_select=self._on_select_log)
+        self.message_log.pack(fill="x", padx=2, pady=4)
+        self.message_log.configure(height=MESSAGE_LOG_HEIGHT)
+        self.message_log.pack_propagate(False)
 
-        self._tools_footer = ctk.CTkFrame(self, fg_color="transparent")
-        self._tools_footer.grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 6))
+        self._tools_footer = ctk.CTkFrame(self._main_scroll, fg_color="transparent")
+        self._tools_footer.pack(fill="x", padx=2, pady=(0, 6))
         self._tools_footer.grid_columnconfigure(0, weight=1)
 
         self.periodic_panel = PeriodicPanel(

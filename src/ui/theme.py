@@ -51,8 +51,9 @@ FONT_MONO = ("Cascadia Mono", 12)
 FONT_MONO_SMALL = ("Cascadia Mono", 11)
 
 # Layout tokens tuned for MacBook Retina viewports (dual-panel workspace).
-COMPOSE_SCROLL_HEIGHT = 150 if sys.platform == "darwin" else 210
-DETAIL_PANEL_HEIGHT = 108 if sys.platform == "darwin" else 140
+DETAIL_PANEL_HEIGHT = 120 if sys.platform == "darwin" else 140
+DETAIL_COLLAPSED_HEIGHT = 34
+MESSAGE_LOG_HEIGHT = 110 if sys.platform == "darwin" else 140
 COMPACT_WIDTH = 520
 
 

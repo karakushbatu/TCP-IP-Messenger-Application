@@ -17,7 +17,6 @@ from src.ui.components import Card, SegmentedControl
 from src.ui.theme import (
     COLORS,
     COMPACT_WIDTH,
-    COMPOSE_SCROLL_HEIGHT,
     FONT_SMALL,
     RADIUS,
     style_button_primary,
@@ -29,7 +28,7 @@ from src.utils.defaults import QUICK_FILL_MESSAGE_1, QUICK_FILL_MESSAGE_2
 
 
 class ComposeForm(Card):
-    """Compose form with scrollable fields; single column on narrow panels."""
+    """Compose form with validation; single column on narrow panels."""
 
     LABEL_WIDTH = 108
     FIELD_WIDTH = 104
@@ -59,18 +58,14 @@ class ComposeForm(Card):
         )
         self._segment.pack(anchor="w", pady=(0, 4))
 
-        self._fields_scroll = ctk.CTkScrollableFrame(
+        self._fields_shell = ctk.CTkFrame(
             self.body,
             fg_color=COLORS["bg_input"],
             corner_radius=RADIUS["sm"],
-            height=COMPOSE_SCROLL_HEIGHT,
-            scrollbar_button_color=COLORS["bg_elevated"],
-            scrollbar_button_hover_color=COLORS["bg_hover"],
         )
-        self._fields_scroll.pack(fill="x", pady=(0, 4))
-        self._fields_scroll.pack_propagate(False)
+        self._fields_shell.pack(fill="x", pady=(0, 4))
 
-        self._fields_frame = ctk.CTkFrame(self._fields_scroll, fg_color="transparent")
+        self._fields_frame = ctk.CTkFrame(self._fields_shell, fg_color="transparent")
         self._fields_frame.pack(fill="x", padx=6, pady=6)
 
         btn_frame = ctk.CTkFrame(self.body, fg_color="transparent")
