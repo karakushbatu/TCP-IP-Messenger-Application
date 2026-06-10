@@ -5,11 +5,16 @@ cd /d "%~dp0\.."
 
 set EXE_NAME=Protocol Bridge
 
-echo Cleaning previous build artifacts...
-if exist build\pyinstaller rmdir /s /q build\pyinstaller
+echo Stopping running instances...
+powershell -NoProfile -Command "Get-Process -Name 'Protocol Bridge','TCP Tactical Messenger','Protokol Köprüsü' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue"
+
+echo Cleaning all previous build artifacts...
 if exist dist rmdir /s /q dist
 if exist dist-new rmdir /s /q dist-new
-if exist "%EXE_NAME%.spec" del /q "%EXE_NAME%.spec"
+for /d %%D in (build\*) do rmdir /s /q "%%D" 2>nul
+del /q "TCP Tactical Messenger.spec" 2>nul
+del /q "Protokol Köprüsü.spec" 2>nul
+for %%F in (*.spec) do if /I not "%%~nF"=="%EXE_NAME%" del /q "%%F" 2>nul
 
 echo Building Windows executable...
 pyinstaller --noconfirm --clean ^

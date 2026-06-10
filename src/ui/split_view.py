@@ -63,7 +63,8 @@ class SplitView(ctk.CTkFrame):
     def _add_home_tab(self, tab_id: str, title: str = HOME_TAB_TITLE) -> str:
         container = ctk.CTkFrame(self._body, fg_color=COLORS["bg_primary"])
         welcome = WelcomeScreen(
-            container, on_select=lambda m, t=tab_id: self._start_demo(t, m)
+            container,
+            on_select=lambda m, t=tab_id: self._start_demo(t, m),
         )
         welcome.pack(fill="both", expand=True)
 

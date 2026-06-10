@@ -11,9 +11,9 @@ MESSAGE_2_FORMAT = "!iibqqi"
 MESSAGE_2_SIZE = 29
 
 RANK_LABELS: dict[int, str] = {
-    0: "First Lieutenant",
-    1: "Lieutenant",
-    2: "Second Lieutenant",
+    0: "Üsteğmen",
+    1: "Teğmen",
+    2: "Asteğmen",
 }
 
 

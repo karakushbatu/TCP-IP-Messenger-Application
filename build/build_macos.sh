@@ -6,8 +6,13 @@ cd "$ROOT"
 
 APP_NAME="Protocol Bridge"
 
-echo "Cleaning previous build artifacts..."
-rm -rf build/pyinstaller dist dist-new "${APP_NAME}.spec"
+echo "Cleaning all previous build artifacts..."
+rm -rf dist dist-new
+find build -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} +
+rm -f "TCP Tactical Messenger.spec" "Protokol Köprüsü.spec"
+for spec in *.spec; do
+  [[ -f "$spec" && "$spec" != "${APP_NAME}.spec" ]] && rm -f "$spec"
+done
 
 echo "Building macOS application..."
 pyinstaller --noconfirm --clean \

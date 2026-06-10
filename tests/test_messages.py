@@ -40,7 +40,7 @@ class TestMessageHelpers:
         msg = Message1(1, 100, "Ali", 42, "Yilmaz", 0)
         d = message_to_dict(msg)
         assert d["First Name"] == "Ali"
-        assert "First Lieutenant" in d["Rank"]
+        assert "Üsteğmen" in d["Rank"]
 
     def test_message_to_dict_message2(self):
         msg = Message2(2, 2001, 1, 1, 2, 100)

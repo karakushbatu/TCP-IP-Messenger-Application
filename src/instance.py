@@ -50,6 +50,9 @@ class Instance:
             self.panel.set_connected_callback(
                 lambda: self._server.is_connected if self._server else False
             )
+            self.panel.set_listening_callback(
+                lambda: self._server.is_running if self._server else False
+            )
         else:
             self._client = TcpClient(self.event_queue)
             self._client.set_status_callback(self.panel.set_status)
@@ -78,6 +81,10 @@ class Instance:
         if self.mode == "server":
             return self._server.is_connected if self._server else False
         return self._client.is_connected if self._client else False
+
+    @property
+    def is_listening(self) -> bool:
+        return self._server.is_running if self._server else False
 
     def set_title(self, title: str) -> None:
         self.panel.set_title(title)

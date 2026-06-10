@@ -64,6 +64,8 @@ class InstancePanel(ctk.CTkFrame):
         self._send_fn: Callable[[Message, bool], bool] | None = None
         self._send_raw_fn: Callable[[bytes], bool] | None = None
         self._is_connected_fn: Callable[[], bool] = lambda: False
+        self._is_listening_fn: Callable[[], bool] = lambda: False
+        self._connection_mode: str | None = None
         self._auto_response_var = ctk.BooleanVar(value=True)
 
         top = ctk.CTkFrame(self, fg_color="transparent")
@@ -199,6 +201,9 @@ class InstancePanel(ctk.CTkFrame):
         self._is_connected_fn = fn
         self.periodic_panel._is_connected = fn  # noqa: SLF001
 
+    def set_listening_callback(self, fn: Callable[[], bool]) -> None:
+        self._is_listening_fn = fn
+
     def set_auto_response_enabled(self, enabled: bool) -> None:
         self._auto_response_var.set(enabled)
 
@@ -214,6 +219,7 @@ class InstancePanel(ctk.CTkFrame):
         on_disconnect: Callable[[], None] | None = None,
     ) -> None:
         """Build connection control widgets based on server/client mode."""
+        self._connection_mode = mode
         for child in self._conn_inner.winfo_children():
             if child is not self._auto_switch.master:
                 child.destroy()
@@ -301,9 +307,14 @@ class InstancePanel(ctk.CTkFrame):
         ts = format_timestamp(event.timestamp)
 
         if event.type == "connected":
+            self.set_status("Connected")
             if self._on_toast:
                 self._on_toast("Connected", "success")
         elif event.type == "disconnected":
+            if self._connection_mode == "server" and self._is_listening_fn():
+                self.set_status("Waiting for connection...")
+            else:
+                self.set_status("Not connected")
             self.periodic_panel.on_disconnect()
             if self._on_toast:
                 self._on_toast("Disconnected", "warning")

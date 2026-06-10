@@ -40,7 +40,10 @@ bash build/build_macos.sh
 ## Protocol & Testing
 
 - Specification: [docs/PROTOCOL.md](docs/PROTOCOL.md)
-- Manual test plan: [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
+- Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Test plan: [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
+- Test cases: [docs/TEST_CASES.md](docs/TEST_CASES.md)
+- Latest test report: [docs/TEST_REPORT.md](docs/TEST_REPORT.md)
 
 ```bash
 pip install -r requirements-dev.txt

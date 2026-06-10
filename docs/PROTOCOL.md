@@ -1,8 +1,8 @@
-# Protokol Köprüsü — Protocol Specification
+# Protocol Bridge — Protocol Specification
 
 ## Application Purpose
 
-TCP Protokol Köprüsü is a desktop demonstration application for TCP/IP binary messaging. It supports two predefined message types, automatic cross-response, periodic transmission, and strict validation.
+**Protocol Bridge** is a desktop demonstration application for TCP/IP binary messaging. It supports two predefined message types, automatic cross-response, periodic transmission, multi-instance tabs, and strict field validation.
 
 ## TCP Framing Rule
 
@@ -20,12 +20,12 @@ Every message on the wire uses length-prefix framing:
 
 | Field | Internal Name | Type | Size | Constraint |
 |---|---|---:|---:|---|
-| Mesaj ID | message_id | int32 | 4 | fixed `1` |
-| Birlik Referans Numarası | unit_reference_no | int32 | 4 | `-1000` to `9999` |
-| Adı | first_name | string | 25 | UTF-8, null-padded |
+| Message ID | message_id | int32 | 4 | fixed `1` |
+| Unit Reference No | unit_reference_no | int32 | 4 | `-1000` to `9999` |
+| First Name | first_name | string | 25 | UTF-8, null-padded |
 | Unit No | unit_no | uint32 | 4 | `0` to `4294967295` |
-| Soyadı | last_name | string | 25 | UTF-8, null-padded |
-| Rütbe | rank | int16 | 2 | `0=Üsteğmen`, `1=Teğmen`, `2=Asteğmen` |
+| Last Name | last_name | string | 25 | UTF-8, null-padded |
+| Rank | rank | int16 | 2 | `0=Üsteğmen`, `1=Teğmen`, `2=Asteğmen` |
 
 Struct format: `!ii25sI25sh`
 
@@ -33,12 +33,12 @@ Struct format: `!ii25sI25sh`
 
 | Field | Internal Name | Type | Size | Constraint |
 |---|---|---:|---:|---|
-| Mesaj ID | message_id | int32 | 4 | fixed `2` |
-| Birlik Referans Numarası | unit_reference_no | int32 | 4 | `1` to `9999` |
-| Birlik Konum Bilgisi Geçerliliği | position_validity | byte | 1 | `1=True`, `0=False` |
-| Enlem | latitude | int64 | 8 | `-32400000` to `32400000` |
-| Boylam | longitude | int64 | 8 | `-64800000` to `64800000` |
-| Yükseklik | altitude | int32 | 4 | `0` to `10000` |
+| Message ID | message_id | int32 | 4 | fixed `2` |
+| Unit Reference No | unit_reference_no | int32 | 4 | `1` to `9999` |
+| Position Valid | position_validity | byte | 1 | `1=True`, `0=False` |
+| Latitude | latitude | int64 | 8 | `-32400000` to `32400000` |
+| Longitude | longitude | int64 | 8 | `-64800000` to `64800000` |
+| Altitude | altitude | int32 | 4 | `0` to `10000` |
 
 Struct format: `!iibqqi`
 
@@ -47,15 +47,21 @@ Struct format: `!iibqqi`
 - All integers must be within defined ranges
 - String fields validated by UTF-8 byte length (max 25 bytes)
 - Message ID must match the selected message type
-- Invalid messages cannot be sent from the UI
+- Invalid messages cannot be sent from the UI (Send button disabled)
 
 ## Auto-Response Behavior
 
 - Receiving Message 1 → automatically sends Message 2
 - Receiving Message 2 → automatically sends Message 1
 - Loop prevention: suppression after auto-send prevents ping-pong
-- Auto-response is toggleable from the UI
-- Auto-response messages are tagged `[Otomatik]` in logs
+- Auto-response is toggleable from the UI (Auto Reply switch)
+- Auto-response messages are tagged `[Auto]` in logs
+
+## Server Connection Policy
+
+- Each server instance accepts **one active TCP client** at a time
+- When a new client connects, the previous client is disconnected at the socket level
+- UI status indicators must reflect disconnect for the replaced client
 
 ## Unknown / Corrupt Message Behavior
 
