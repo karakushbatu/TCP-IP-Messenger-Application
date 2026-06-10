@@ -1,3 +1,5 @@
+> **Arşiv notu:** Bu dosya projenin orijinal geliştirme brief'idir (TCP Tactical Messenger, Türkçe UI). Güncel uygulama **Protocol Bridge** adıyla İngilizce UI kullanır. Resmi dokümantasyon için `README.md` ve `docs/` klasörüne bakın.
+
 # Cursor Starter Prompt — TCP/IP Tactical Messenger Desktop App
 
 You are an expert Python desktop application engineer. Build a complete, polished, presentation-ready desktop application named:

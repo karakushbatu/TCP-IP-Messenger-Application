@@ -305,6 +305,7 @@ class SplitView(ctk.CTkFrame):
         self._toast.show(message, toast_type)
 
     def _poll_events(self) -> None:
+        # Network threads push to queues; UI must drain on main thread only
         for tab in self._tabs.values():
             if tab.manager:
                 tab.manager.process_all_events()

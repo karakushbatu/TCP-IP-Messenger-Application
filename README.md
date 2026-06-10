@@ -4,6 +4,17 @@
 
 Desktop application demonstrating TCP/IP binary messaging. Server/client modes, auto-response, periodic sending, and multi-instance tabs in one app.
 
+## Download
+
+Pre-built binaries: **[GitHub Releases](https://github.com/karakushbatu/TCP-IP-Messenger-Application/releases/latest)**
+
+| Platform | Asset |
+|---|---|
+| Windows | `Protocol-Bridge-Windows.zip` |
+| macOS | `Protocol-Bridge-macOS.dmg` |
+
+> **macOS tip:** Each panel scrolls vertically — scroll down to reach compose fields and Send. Message Detail is collapsed by default; click **▶ Message Detail** to expand, or click a log row to auto-expand.
+
 ## Features
 
 - **Instance tabs** — Home tab + `+ Instance` for multiple server/client sessions
@@ -14,7 +25,7 @@ Desktop application demonstrating TCP/IP binary messaging. Server/client modes, 
 - **Field hints** — Hover tooltips show valid value ranges
 - **Validation** — Field bounds, byte counter, disabled Send on invalid data
 - **Test tools** — Unknown ID and corrupt packet injection
-- **Message history & detail** — Click a log row for full content in the bottom panel
+- **Message history & detail** — Click a log row for full content in the collapsible bottom panel
 
 ## Quick Start
 
@@ -39,7 +50,7 @@ bash build/build_macos.sh
 
 ## Protocol & Testing
 
-- Specification: [docs/PROTOCOL.md](docs/PROTOCOL.md)
+- Specification (TR): [docs/PROTOCOL.md](docs/PROTOCOL.md)
 - Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Test plan: [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
 - Test cases: [docs/TEST_CASES.md](docs/TEST_CASES.md)

@@ -30,7 +30,7 @@ class Instance:
         self.panel = panel
         self.event_queue = event_queue or queue.Queue()
         self.port = 8080
-        self.host = "127.0.0.1"
+        self.host = "127.0.0.1"  # loopback — same machine as server in demo modes
 
         self._server: TcpServer | None = None
         self._client: TcpClient | None = None
@@ -128,6 +128,7 @@ class Instance:
 
     def process_events(self) -> None:
         """Drain event queue and update UI."""
+        # Called from main thread via SplitView._poll_events (50 ms)
         while not self.event_queue.empty():
             try:
                 event = self.event_queue.get_nowait()

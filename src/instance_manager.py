@@ -56,7 +56,7 @@ class InstanceManager:
         client = self._create_client_panel(parent, on_toast)
 
         if mode == "auto" and on_auto_connect:
-            on_auto_connect(server, client)
+            on_auto_connect(server, client)  # server starts, client connects after delay
 
         return server, client
 

@@ -16,7 +16,7 @@ from src.protocol.messages import (
     Message2,
 )
 
-HEADER_FORMAT = "!I"
+HEADER_FORMAT = "!I"  # 4-byte big-endian length prefix before every payload
 HEADER_SIZE = 4
 
 
@@ -99,6 +99,7 @@ def frame_payload(payload: bytes) -> bytes:
 
 def read_exact(sock: socket.socket, size: int) -> bytes:
     """Read exactly `size` bytes from socket, handling partial reads."""
+    # TCP is a stream — recv() may return fewer bytes than requested
     chunks: list[bytes] = []
     remaining = size
     while remaining > 0:

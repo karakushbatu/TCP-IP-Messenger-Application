@@ -25,6 +25,7 @@ class AppShell:
 
     def _fit_window_geometry(self) -> None:
         """Size window to the display — avoids clipped panels on MacBook screens."""
+        # Cap size so dual-panel layout fits Retina laptop viewports
         self.root.update_idletasks()
         screen_w = self.root.winfo_screenwidth()
         screen_h = self.root.winfo_screenheight()

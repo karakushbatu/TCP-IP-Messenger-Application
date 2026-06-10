@@ -56,7 +56,7 @@ class ConnectionHandler:
     """Manages send/receive on a single TCP connection."""
 
     def __init__(self, event_queue: queue.Queue[NetworkEvent]) -> None:
-        self._event_queue = event_queue
+        self._event_queue = event_queue  # thread-safe bridge to UI main thread
         self._socket: socket.socket | None = None
         self._lock = threading.Lock()
         self._running = False
@@ -77,7 +77,7 @@ class ConnectionHandler:
         self._running = True
         self._recv_thread = threading.Thread(target=self._receive_loop, daemon=True)
         self._recv_thread.start()
-        self._emit("connected", None)
+        self._emit("connected", None)  # UI polls queue, never touches socket directly
 
     def close(self) -> None:
         """Close connection and stop receive thread."""
@@ -111,7 +111,7 @@ class ConnectionHandler:
                 if is_auto:
                     self.auto_response_guard.mark_auto_sent()
                 else:
-                    self.auto_response_guard.mark_manual_sent()
+                    self.auto_response_guard.mark_manual_sent()  # manual send resets loop guard
                 self._emit(
                     "message_sent",
                     SentMessageInfo(message=message, is_auto=is_auto, is_periodic=is_periodic),

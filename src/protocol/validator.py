@@ -147,7 +147,7 @@ def build_message(message_id: int, data: dict[str, object]) -> Message:
     """Build a validated message or raise ValueError."""
     errors = validate_message(message_id, data)
     if errors:
-        raise ValueError(errors[0].message)
+        raise ValueError(errors[0].message)  # UI shows first error; Send stays disabled until fixed
 
     if message_id == 1:
         return Message1(

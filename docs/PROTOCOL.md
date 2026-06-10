@@ -1,69 +1,88 @@
-# Protocol Bridge — Protocol Specification
+# Protocol Bridge — Protokol Spesifikasyonu
 
-## Application Purpose
+## Uygulama Amacı
 
-**Protocol Bridge** is a desktop demonstration application for TCP/IP binary messaging. It supports two predefined message types, automatic cross-response, periodic transmission, multi-instance tabs, and strict field validation.
+**Protocol Bridge**, TCP/IP üzerinden ikili (binary) mesajlaşmayı gösteren bir masaüstü uygulamasıdır. İki tanımlı mesaj tipi, otomatik çapraz yanıt, periyodik gönderim, çoklu instance sekmeleri ve katı alan doğrulaması desteklenir.
 
-## TCP Framing Rule
+## TCP/IP Bağlantısı — IP Ne Anlama Gelir?
 
-Every message on the wire uses length-prefix framing:
+**TCP/IP** iki katmandan oluşur:
+
+| Katman | Rol | Bu projede |
+|---|---|---|
+| **IP** | Paketin *hangi makineye* gideceğini belirler (adres) | Client panelindeki IP alanı |
+| **TCP** | O makinede *hangi uygulamanın* dinlediğini belirler (port) | Sunucu/istemci portu (örn. 8080) |
+
+**IP adresi**, ağdaki bir bilgisayarın kimliğidir. Client bağlanırken hedef makinenin IP'sini yazar; sunucu ise `0.0.0.0` ile tüm ağ arayüzlerinde dinler.
+
+| IP | Anlam | Ne olur? |
+|---|---|---|
+| `127.0.0.1` | Loopback — *aynı bilgisayar* | Sunucu ve client aynı makinede çalışırken kullanılır (Auto/Manual demo) |
+| `192.168.x.x` | Yerel ağdaki başka bir cihaz | Aynı Wi‑Fi/LAN'daki başka PC'ye bağlanırsın |
+| `0.0.0.0` (sunucu bind) | Tüm arayüzlerde dinle | Dışarıdan gelen bağlantıları da kabul eder |
+
+Farklı IP yazarsan client **o adresteki makinede** çalışan sunucuya bağlanmaya çalışır. IP yanlışsa veya karşı tarafta sunucu yoksa bağlantı başarısız olur; mesajlar gitmez. Port da eşleşmeli (örn. her iki tarafta 8080).
+
+## TCP Çerçeveleme Kuralı
+
+Her mesaj kablo üzerinde uzunluk önekli (length-prefix) çerçeve ile gider:
 
 ```
-[4-byte length header][binary message payload]
+[4 bayt uzunluk başlığı][ikili mesaj gövdesi]
 ```
 
-- Header format: `!I` (unsigned int, network byte order, big-endian)
-- Length value = payload size only (excludes the 4-byte header)
-- Receiver must read exactly `length` bytes after the header
+- Başlık formatı: `!I` (unsigned int, network byte order, big-endian)
+- Uzunluk değeri = yalnızca gövde boyutu (4 baytlık başlık hariç)
+- Alıcı, başlıktan sonra tam olarak `length` bayt okumalıdır
 
-## Message 1 — Personnel Message (64 bytes)
+## Mesaj 1 — Personel Mesajı (64 bayt)
 
-| Field | Internal Name | Type | Size | Constraint |
+| Alan | Dahili Ad | Tip | Boyut | Kısıt |
 |---|---|---:|---:|---|
-| Message ID | message_id | int32 | 4 | fixed `1` |
-| Unit Reference No | unit_reference_no | int32 | 4 | `-1000` to `9999` |
-| First Name | first_name | string | 25 | UTF-8, null-padded |
-| Unit No | unit_no | uint32 | 4 | `0` to `4294967295` |
-| Last Name | last_name | string | 25 | UTF-8, null-padded |
-| Rank | rank | int16 | 2 | `0=Üsteğmen`, `1=Teğmen`, `2=Asteğmen` |
+| Mesaj ID | message_id | int32 | 4 | sabit `1` |
+| Birlik Referans No | unit_reference_no | int32 | 4 | `-1000` – `9999` |
+| Ad | first_name | string | 25 | UTF-8, null ile doldurulmuş |
+| Birlik No | unit_no | uint32 | 4 | `0` – `4294967295` |
+| Soyad | last_name | string | 25 | UTF-8, null ile doldurulmuş |
+| Rütbe | rank | int16 | 2 | `0=Üsteğmen`, `1=Teğmen`, `2=Asteğmen` |
 
-Struct format: `!ii25sI25sh`
+Struct formatı: `!ii25sI25sh`
 
-## Message 2 — Unit Position Message (29 bytes)
+## Mesaj 2 — Birlik Konum Mesajı (29 bayt)
 
-| Field | Internal Name | Type | Size | Constraint |
+| Alan | Dahili Ad | Tip | Boyut | Kısıt |
 |---|---|---:|---:|---|
-| Message ID | message_id | int32 | 4 | fixed `2` |
-| Unit Reference No | unit_reference_no | int32 | 4 | `1` to `9999` |
-| Position Valid | position_validity | byte | 1 | `1=True`, `0=False` |
-| Latitude | latitude | int64 | 8 | `-32400000` to `32400000` |
-| Longitude | longitude | int64 | 8 | `-64800000` to `64800000` |
-| Altitude | altitude | int32 | 4 | `0` to `10000` |
+| Mesaj ID | message_id | int32 | 4 | sabit `2` |
+| Birlik Referans No | unit_reference_no | int32 | 4 | `1` – `9999` |
+| Konum Geçerli | position_validity | byte | 1 | `1=True`, `0=False` |
+| Enlem | latitude | int64 | 8 | `-32400000` – `32400000` |
+| Boylam | longitude | int64 | 8 | `-64800000` – `64800000` |
+| İrtifa | altitude | int32 | 4 | `0` – `10000` |
 
-Struct format: `!iibqqi`
+Struct formatı: `!iibqqi`
 
-## Validation Constraints
+## Doğrulama Kuralları
 
-- All integers must be within defined ranges
-- String fields validated by UTF-8 byte length (max 25 bytes)
-- Message ID must match the selected message type
-- Invalid messages cannot be sent from the UI (Send button disabled)
+- Tüm tamsayılar tanımlı aralıkta olmalıdır
+- String alanları UTF-8 bayt uzunluğuna göre doğrulanır (maks. 25 bayt)
+- Mesaj ID, seçilen mesaj tipi ile eşleşmelidir
+- Geçersiz mesajlar UI'dan gönderilemez (Send butonu devre dışı)
 
-## Auto-Response Behavior
+## Otomatik Yanıt Davranışı
 
-- Receiving Message 1 → automatically sends Message 2
-- Receiving Message 2 → automatically sends Message 1
-- Loop prevention: suppression after auto-send prevents ping-pong
-- Auto-response is toggleable from the UI (Auto Reply switch)
-- Auto-response messages are tagged `[Auto]` in logs
+- Mesaj 1 alındığında → otomatik Mesaj 2 gönderilir
+- Mesaj 2 alındığında → otomatik Mesaj 1 gönderilir
+- Döngü koruması: otomatik gönderim sonrası ping-pong engellenir
+- Otomatik yanıt UI'dan kapatılabilir (Auto Reply anahtarı)
+- Otomatik yanıt mesajları logda `[Auto]` etiketi taşır
 
-## Server Connection Policy
+## Sunucu Bağlantı Politikası
 
-- Each server instance accepts **one active TCP client** at a time
-- When a new client connects, the previous client is disconnected at the socket level
-- UI status indicators must reflect disconnect for the replaced client
+- Her sunucu instance'ı aynı anda **yalnızca bir aktif TCP client** kabul eder
+- Yeni client bağlandığında önceki client soket seviyesinde kapatılır
+- UI durum göstergeleri, devre dışı kalan client için disconnect yansıtmalıdır
 
-## Unknown / Corrupt Message Behavior
+## Bilinmeyen / Bozuk Mesaj Davranışı
 
-- Unknown message ID → warning event, no auto-response, no crash
-- Truncated/corrupt payload → protocol error event, no auto-response, no crash
+- Bilinmeyen mesaj ID → uyarı olayı, otomatik yanıt yok, çökme yok
+- Kesik/bozuk gövde → protokol hatası olayı, otomatik yanıt yok, çökme yok

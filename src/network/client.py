@@ -38,9 +38,9 @@ class TcpClient:
         self._set_status("Connecting...")
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(5.0)
+            sock.settimeout(5.0)  # fail fast if host/port unreachable
             sock.connect((host, port))
-            sock.settimeout(None)
+            sock.settimeout(None)  # blocking reads in receive loop
             self._handler.set_socket(sock)
             self._set_status("Connected")
             return True

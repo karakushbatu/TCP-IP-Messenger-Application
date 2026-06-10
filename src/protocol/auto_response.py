@@ -53,7 +53,7 @@ class AutoResponseGuard:
             return False
         if self.prevent_loop and self._suppress_next:
             self._suppress_next = False
-            return False
+            return False  # skip one hop to break A→B→A→B ping-pong
         return create_auto_response(received) is not None
 
     def mark_auto_sent(self) -> None:

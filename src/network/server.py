@@ -51,6 +51,7 @@ class TcpServer:
         try:
             self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # 0.0.0.0 = listen on all network interfaces (LAN + localhost)
             self._server_socket.bind(("0.0.0.0", port))
             self._server_socket.listen(1)
             self._port = port
@@ -79,6 +80,7 @@ class TcpServer:
         while self._running and self._server_socket:
             try:
                 client_sock, _addr = self._server_socket.accept()
+                # Single-client policy: drop previous connection when a new one arrives
                 self._handler.close()
                 self._handler.set_socket(client_sock)
                 self._set_status("Connected")

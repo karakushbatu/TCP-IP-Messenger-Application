@@ -3,9 +3,10 @@
 | Alan | Değer |
 |---|---|
 | **Tarih** | 10 Haziran 2026 |
+| **Sürüm** | v1.1.2 |
 | **Ortam** | Windows 11 · Python 3.12.10 |
-| **Branch** | main (local) |
-| **Rapor Türü** | Otomatik test + coverage + CI karşılaştırma |
+| **Branch** | main |
+| **Rapor Türü** | Otomatik test + coverage + CI karşılaştırma + manuel macOS smoke |
 
 ---
 
@@ -116,6 +117,18 @@ ruff check src/ tests/
 
 Manuel regression için [TEST_CASES.md](TEST_CASES.md) ST-01 — ST-26 tablosu kullanılmalıdır.
 
+### 6.1 macOS Retina Layout (v1.1.2 — Smoke Test)
+
+| Kontrol | Sonuç | Not |
+|---|---|---|
+| Compose alanı input'ları görünür | ✅ | İç içe scroll kaldırıldı; düz frame kullanılıyor |
+| Panel dikey scroll (Server/Client) | ✅ | Connection → Compose → History → Tools kaydırılabilir |
+| Send / Quick Fill erişilebilir | ✅ | Scroll ile alt alana ulaşılıyor |
+| Message Detail daraltılabilir | ✅ | macOS'ta varsayılan kapalı; ▶/▼ ile toggle |
+| Log tıklayınca detail açılır | ✅ | Otomatik genişletme çalışıyor |
+
+> **Ortam:** macOS (M1 Retina), v1.1.2 DMG. Dual-panel Auto Connect modu.
+
 ---
 
 ## 7. Açık Riskler ve Öneriler
@@ -154,6 +167,6 @@ python -m pytest tests/ --cov=src/protocol --cov-report=html:htmlcov
 | Coverage ≥ %90 | ✅ GEÇTİ (90,54%) |
 | Lint | ✅ GEÇTİ |
 | CI uyumluluğu | ✅ UYUMLU |
-| Manuel ST | ⏳ Release öncesi checklist |
+| Manuel ST | ✅ v1.1.2 macOS smoke geçti; ST-23 release checklist'te |
 
-**Onay önerisi:** Otomatik kalite kapıları production build için yeterli. Release öncesi ST-23, ST-26 manuel doğrulaması önerilir.
+**Onay önerisi:** Otomatik kalite kapıları production build için yeterli. Release öncesi ST-23 manuel doğrulaması önerilir.
