@@ -11,10 +11,10 @@ class StatusBar(ctk.CTkFrame):
     """Shows connection status with colored indicator."""
 
     STATUS_COLORS = {
-        "Bağlı": COLORS["success"],
-        "Bağlantı bekleniyor...": COLORS["warning"],
-        "Bağlanıyor...": COLORS["warning"],
-        "Bağlantı yok": COLORS["text_tertiary"],
+        "Connected": COLORS["success"],
+        "Waiting for connection...": COLORS["warning"],
+        "Connecting...": COLORS["warning"],
+        "Not connected": COLORS["text_tertiary"],
     }
 
     def __init__(self, master: ctk.CTkBaseClass, title: str = "") -> None:
@@ -46,7 +46,7 @@ class StatusBar(ctk.CTkFrame):
 
         self._status_label = ctk.CTkLabel(
             inner,
-            text="Bağlantı yok",
+            text="Not connected",
             font=FONT_BODY,
             text_color=COLORS["text_secondary"],
         )

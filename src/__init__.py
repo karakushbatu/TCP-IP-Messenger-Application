@@ -1,1 +1,1 @@
-"""TCP Tactical Messenger application package."""
+"""Protocol Bridge application package."""

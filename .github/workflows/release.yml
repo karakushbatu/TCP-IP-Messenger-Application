@@ -54,14 +54,14 @@ jobs:
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
-          name: TCP-Tactical-Messenger-macOS-dmg
-          path: dist/TCP-Tactical-Messenger-macOS.dmg
+          name: Protocol-Bridge-macOS-dmg
+          path: dist/Protocol-Bridge-macOS.dmg
 
       - name: Upload macOS ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: TCP-Tactical-Messenger-macOS-zip
-          path: dist/TCP-Tactical-Messenger-macOS.zip
+          name: Protocol-Bridge-macOS-zip
+          path: dist/Protocol-Bridge-macOS.zip
 
   build-windows:
     needs: test
@@ -86,8 +86,8 @@ jobs:
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TCP-Tactical-Messenger-Windows
-          path: dist/TCP-Tactical-Messenger-Windows.zip
+          name: Protocol-Bridge-Windows
+          path: dist/Protocol-Bridge-Windows.zip
 
   release:
     needs: [build-macos, build-windows]
@@ -102,6 +102,6 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            artifacts/TCP-Tactical-Messenger-macOS-dmg/TCP-Tactical-Messenger-macOS.dmg
-            artifacts/TCP-Tactical-Messenger-macOS-zip/TCP-Tactical-Messenger-macOS.zip
-            artifacts/TCP-Tactical-Messenger-Windows/TCP-Tactical-Messenger-Windows.zip
+            artifacts/Protocol-Bridge-macOS-dmg/Protocol-Bridge-macOS.dmg
+            artifacts/Protocol-Bridge-macOS-zip/Protocol-Bridge-macOS.zip
+            artifacts/Protocol-Bridge-Windows/Protocol-Bridge-Windows.zip

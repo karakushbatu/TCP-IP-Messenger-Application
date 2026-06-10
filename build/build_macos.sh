@@ -4,45 +4,45 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+APP_NAME="Protocol Bridge"
+
 echo "Cleaning previous build artifacts..."
-rm -rf build/pyinstaller dist "TCP Tactical Messenger.spec"
+rm -rf build/pyinstaller dist dist-new "${APP_NAME}.spec"
 
 echo "Building macOS application..."
 pyinstaller --noconfirm --clean \
   --onefile --windowed \
-  --name "TCP Tactical Messenger" \
+  --name "$APP_NAME" \
   --paths . \
   --collect-all customtkinter \
   --add-data "assets:assets" \
   --hidden-import "src.app" \
+  --hidden-import "src.app_info" \
   --hidden-import "src.instance" \
   --hidden-import "src.instance_manager" \
   src/main.py
 
 cd dist
-APP_NAME="TCP Tactical Messenger.app"
-VOLUME_NAME="TCP Tactical Messenger"
+APP_BUNDLE="${APP_NAME}.app"
 
-if [[ ! -d "$APP_NAME" ]]; then
-  echo "ERROR: Expected $APP_NAME not found in dist/"
+if [[ ! -d "$APP_BUNDLE" ]]; then
+  echo "ERROR: Expected $APP_BUNDLE not found in dist/"
   ls -la
   exit 1
 fi
 
 echo "Creating DMG installer..."
-rm -f "TCP-Tactical-Messenger-macOS.dmg" "TCP-Tactical-Messenger-macOS.zip"
+rm -f "Protocol-Bridge-macOS.dmg" "Protocol-Bridge-macOS.zip"
 
-# Primary macOS distribution: DMG
 hdiutil create \
-  -volname "$VOLUME_NAME" \
-  -srcfolder "$APP_NAME" \
+  -volname "$APP_NAME" \
+  -srcfolder "$APP_BUNDLE" \
   -ov \
   -format UDZO \
-  "TCP-Tactical-Messenger-macOS.dmg"
+  "Protocol-Bridge-macOS.dmg"
 
-# Optional ZIP fallback for automation-restricted environments
-zip -r "TCP-Tactical-Messenger-macOS.zip" "$APP_NAME"
+zip -r "Protocol-Bridge-macOS.zip" "$APP_BUNDLE"
 
 echo ""
 echo "Build complete:"
-ls -lh "TCP-Tactical-Messenger-macOS.dmg" "TCP-Tactical-Messenger-macOS.zip"
+ls -lh "Protocol-Bridge-macOS.dmg" "Protocol-Bridge-macOS.zip"

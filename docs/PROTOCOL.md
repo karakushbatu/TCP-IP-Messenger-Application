@@ -1,8 +1,8 @@
-# TCP Tactical Messenger — Protocol Specification
+# Protokol Köprüsü — Protocol Specification
 
 ## Application Purpose
 
-TCP Tactical Messenger is a desktop demonstration application for TCP/IP binary messaging. It supports two predefined message types, automatic cross-response, periodic transmission, and strict validation.
+TCP Protokol Köprüsü is a desktop demonstration application for TCP/IP binary messaging. It supports two predefined message types, automatic cross-response, periodic transmission, and strict validation.
 
 ## TCP Framing Rule
 

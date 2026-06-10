@@ -57,7 +57,7 @@ class TcpServer:
             self._running = True
             self._accept_thread = threading.Thread(target=self._accept_loop, daemon=True)
             self._accept_thread.start()
-            self._set_status("Bağlantı bekleniyor...")
+            self._set_status("Waiting for connection...")
             return True
         except OSError:
             self.stop()
@@ -73,7 +73,7 @@ class TcpServer:
             except OSError:
                 pass
             self._server_socket = None
-        self._set_status("Bağlantı yok")
+        self._set_status("Not connected")
 
     def _accept_loop(self) -> None:
         while self._running and self._server_socket:
@@ -81,6 +81,6 @@ class TcpServer:
                 client_sock, _addr = self._server_socket.accept()
                 self._handler.close()
                 self._handler.set_socket(client_sock)
-                self._set_status("Bağlı")
+                self._set_status("Connected")
             except OSError:
                 break

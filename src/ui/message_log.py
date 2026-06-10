@@ -44,7 +44,7 @@ class MessageLog(ctk.CTkFrame):
 
         header = ctk.CTkLabel(
             self,
-            text="Mesaj Geçmişi",
+            text="Message History",
             font=("Segoe UI", 14, "bold"),
             text_color=COLORS["text_primary"],
         )
@@ -74,19 +74,19 @@ class MessageLog(ctk.CTkFrame):
 
     def _render_entry(self, entry: LogEntry) -> None:
         if entry.is_warning:
-            text = f"[{entry.timestamp}] Uyarı Tanımsız Mesaj ID: {entry.unknown_id}"
+            text = f"[{entry.timestamp}] Warning Unknown Message ID: {entry.unknown_id}"
             color = COLORS["warning"]
             bg = COLORS["bg_tertiary"]
         elif entry.is_error:
-            text = f"[{entry.timestamp}] Hata {entry.error_text or 'Çözümlenemeyen mesaj'}"
+            text = f"[{entry.timestamp}] Error {entry.error_text or 'Unparseable message'}"
             color = COLORS["error"]
             bg = COLORS["bg_tertiary"]
         else:
             auto_tag = ""
             if entry.is_auto:
-                auto_tag = " [Otomatik]"
+                auto_tag = " [Auto]"
             elif entry.is_periodic:
-                auto_tag = " [Periyodik]"
+                auto_tag = " [Periodic]"
             msg_label = get_message_short_label(entry.message_id or 0)
             text = f"[{entry.timestamp}] {entry.direction} {msg_label}{auto_tag}"
             if entry.direction == "Transmit":

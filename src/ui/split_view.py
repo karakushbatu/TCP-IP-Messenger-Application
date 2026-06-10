@@ -16,6 +16,7 @@ from src.ui.toast import ToastManager
 from src.ui.welcome_screen import WelcomeScreen
 
 HOME_TAB_ID = "home"
+HOME_TAB_TITLE = "Home"
 
 
 @dataclass
@@ -52,14 +53,14 @@ class SplitView(ctk.CTkFrame):
         self._body = ctk.CTkFrame(self, fg_color=COLORS["bg_primary"])
         self._body.pack(fill="both", expand=True)
 
-        self._add_home_tab(tab_id=HOME_TAB_ID, title="Ana Sayfa")
+        self._add_home_tab(tab_id=HOME_TAB_ID, title=HOME_TAB_TITLE)
         self._poll_events()
 
     def _new_tab_id(self) -> str:
         self._tab_counter += 1
         return f"tab-{self._tab_counter}"
 
-    def _add_home_tab(self, tab_id: str, title: str = "Ana Sayfa") -> str:
+    def _add_home_tab(self, tab_id: str, title: str = HOME_TAB_TITLE) -> str:
         container = ctk.CTkFrame(self._body, fg_color=COLORS["bg_primary"])
         welcome = WelcomeScreen(
             container, on_select=lambda m, t=tab_id: self._start_demo(t, m)
@@ -214,7 +215,7 @@ class SplitView(ctk.CTkFrame):
         self._refresh_tab_bar()
 
     def _reset_home_tab(self) -> None:
-        """Return Ana Sayfa tab to initial welcome screen."""
+        """Return Home tab to initial welcome screen."""
         tab = self._tabs[HOME_TAB_ID]
         if tab.manager:
             tab.manager.stop_all()
@@ -227,7 +228,7 @@ class SplitView(ctk.CTkFrame):
         )
         welcome.pack(fill="both", expand=True)
 
-        tab.title = "Ana Sayfa"
+        tab.title = HOME_TAB_TITLE
         tab.is_home = True
         tab.manager = None
         tab.mode = None
@@ -245,26 +246,26 @@ class SplitView(ctk.CTkFrame):
 
     def _mode_tab_title(self, mode: DemoMode) -> str:
         return {
-            "auto": "Otomatik Bağlantı",
-            "manual": "Manuel Bağlantı",
-            "server_only": "Sunucu Instance",
-            "client_only": "İstemci Instance",
+            "auto": "Auto Connect",
+            "manual": "Manual Connect",
+            "server_only": "Server Instance",
+            "client_only": "Client Instance",
         }.get(mode, mode)
 
     def _mode_label(self, mode: DemoMode) -> str:
         return {
-            "auto": "Otomatik",
-            "manual": "Manuel",
-            "server_only": "Sunucu",
-            "client_only": "İstemci",
+            "auto": "Auto",
+            "manual": "Manual",
+            "server_only": "Server",
+            "client_only": "Client",
         }.get(mode, mode)
 
     def _mode_hint_text(self, mode: DemoMode) -> str:
         return {
-            "auto": "Sunucu ve istemci otomatik başlatılıp bağlanır",
-            "manual": "Sunucuyu başlatın, ardından istemciden bağlanın",
-            "server_only": "Yalnızca sunucu dinler",
-            "client_only": "Yalnızca istemci bağlanır",
+            "auto": "Server and client start and connect automatically",
+            "manual": "Start the server, then connect from the client",
+            "server_only": "Server listens only",
+            "client_only": "Client connects only",
         }.get(mode, "")
 
     def _on_log_select(self, tab_id: str, entry: LogEntry) -> None:
@@ -289,13 +290,13 @@ class SplitView(ctk.CTkFrame):
 
     def _auto_connect(self, tab: AppTab, server: Instance, client: Instance) -> None:
         server.start_server(8080)
-        self._show_toast("Sunucu başlatıldı", "success")
+        self._show_toast("Server started", "success")
 
         def try_connect() -> None:
             if client.connect("127.0.0.1", 8080):
                 pass
             else:
-                self._show_toast("Bağlantı kurulamadı", "error")
+                self._show_toast("Connection failed", "error")
 
         self._master.after(300, try_connect)
 

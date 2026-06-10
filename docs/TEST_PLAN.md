@@ -1,4 +1,4 @@
-# TCP Tactical Messenger — Test Plan
+# Protokol Köprüsü — Test Plan
 
 Bu doküman case study kapsamındaki gereksinimlere göre test akışını özetler.
 

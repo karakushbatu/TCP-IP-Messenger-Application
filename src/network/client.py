@@ -35,20 +35,20 @@ class TcpClient:
     def connect(self, host: str, port: int) -> bool:
         """Connect to a remote server."""
         self.disconnect()
-        self._set_status("Bağlanıyor...")
+        self._set_status("Connecting...")
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(5.0)
             sock.connect((host, port))
             sock.settimeout(None)
             self._handler.set_socket(sock)
-            self._set_status("Bağlı")
+            self._set_status("Connected")
             return True
         except OSError:
-            self._set_status("Bağlantı yok")
+            self._set_status("Not connected")
             return False
 
     def disconnect(self) -> None:
         """Disconnect from server."""
         self._handler.close()
-        self._set_status("Bağlantı yok")
+        self._set_status("Not connected")

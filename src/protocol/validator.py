@@ -29,13 +29,13 @@ def _validate_int_field(
 ) -> list[ValidationError]:
     errors: list[ValidationError] = []
     if not isinstance(value, int) or isinstance(value, bool):
-        errors.append(ValidationError(field_name, f"{ui_label} tam sayı olmalıdır."))
+        errors.append(ValidationError(field_name, f"{ui_label} must be an integer."))
         return errors
     if min_value is not None and value < min_value:
         errors.append(
             ValidationError(
                 field_name,
-                f"{ui_label} en az {min_value} olmalıdır.",
+                f"{ui_label} must be at least {min_value}.",
                 min_value=min_value,
                 max_value=max_value,
             )
@@ -44,7 +44,7 @@ def _validate_int_field(
         errors.append(
             ValidationError(
                 field_name,
-                f"{ui_label} en fazla {max_value} olmalıdır.",
+                f"{ui_label} must be at most {max_value}.",
                 min_value=min_value,
                 max_value=max_value,
             )
@@ -60,14 +60,14 @@ def _validate_string_field(
 ) -> list[ValidationError]:
     errors: list[ValidationError] = []
     if not isinstance(value, str):
-        errors.append(ValidationError(field_name, f"{ui_label} metin olmalıdır."))
+        errors.append(ValidationError(field_name, f"{ui_label} must be text."))
         return errors
     encoded = value.encode("utf-8")
     if len(encoded) > byte_length:
         errors.append(
             ValidationError(
                 field_name,
-                f"{ui_label} en fazla {byte_length} byte olabilir (şu an {len(encoded)} byte).",
+                f"{ui_label} must be at most {byte_length} bytes (currently {len(encoded)}).",
                 max_value=byte_length,
             )
         )
@@ -82,7 +82,7 @@ def validate_message1(data: dict[str, object]) -> list[ValidationError]:
     msg_id = data.get("message_id", 1)
     if msg_id != 1:
         errors.append(
-            ValidationError("message_id", "Mesaj ID 1 olmalıdır.", min_value=1, max_value=1)
+            ValidationError("message_id", "Message ID must be 1.", min_value=1, max_value=1)
         )
 
     for name in ("unit_reference_no", "unit_no", "rank"):
@@ -116,7 +116,7 @@ def validate_message2(data: dict[str, object]) -> list[ValidationError]:
     msg_id = data.get("message_id", 2)
     if msg_id != 2:
         errors.append(
-            ValidationError("message_id", "Mesaj ID 2 olmalıdır.", min_value=2, max_value=2)
+            ValidationError("message_id", "Message ID must be 2.", min_value=2, max_value=2)
         )
 
     for name in ("unit_reference_no", "position_validity", "latitude", "longitude", "altitude"):
@@ -140,7 +140,7 @@ def validate_message(message_id: int, data: dict[str, object]) -> list[Validatio
         return validate_message1(data)
     if message_id == 2:
         return validate_message2(data)
-    return [ValidationError("message_id", f"Geçersiz mesaj tipi: {message_id}")]
+    return [ValidationError("message_id", f"Invalid message type: {message_id}")]
 
 
 def build_message(message_id: int, data: dict[str, object]) -> Message:

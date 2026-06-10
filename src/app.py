@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import customtkinter as ctk
 
+from src.app_info import APP_NAME
 from src.ui.split_view import SplitView
 from src.ui.theme import COLORS, apply_theme
 
@@ -14,7 +15,7 @@ class AppShell:
     def __init__(self) -> None:
         apply_theme()
         self.root = ctk.CTk()
-        self.root.title("TCP Tactical Messenger")
+        self.root.title(APP_NAME)
         self.root.minsize(900, 600)
         self.root.geometry("1280x760")
         self.root.configure(fg_color=COLORS["bg_primary"])

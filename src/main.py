@@ -1,4 +1,4 @@
-"""Entry point for TCP Tactical Messenger."""
+"""Entry point for Protocol Bridge."""
 
 from src.app import AppShell
 

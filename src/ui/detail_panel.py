@@ -29,21 +29,21 @@ class DetailPanel(ctk.CTkFrame):
 
         ctk.CTkLabel(
             header,
-            text="Mesaj Detayı",
+            text="Message Detail",
             font=FONT_HEADING,
             text_color=COLORS["text_primary"],
         ).pack(side="left")
 
         ctk.CTkLabel(
             header,
-            text="Log satırına tıklayın",
+            text="Click a log entry",
             font=FONT_SMALL,
             text_color=COLORS["text_tertiary"],
         ).pack(side="left", padx=(10, 0))
 
         self._meta_label = ctk.CTkLabel(
             self,
-            text="Henüz seçili mesaj yok",
+            text="No message selected",
             font=FONT_MONO,
             text_color=COLORS["text_tertiary"],
             anchor="w",
@@ -60,7 +60,7 @@ class DetailPanel(ctk.CTkFrame):
         self._scroll.pack(fill="both", expand=True, padx=14, pady=(0, 10))
 
     def clear(self) -> None:
-        self._meta_label.configure(text="Henüz seçili mesaj yok")
+        self._meta_label.configure(text="No message selected")
         for child in self._scroll.winfo_children():
             child.destroy()
 
@@ -77,15 +77,15 @@ class DetailPanel(ctk.CTkFrame):
         for child in self._scroll.winfo_children():
             child.destroy()
 
-        auto_tag = " [Otomatik]" if is_auto else ""
+        auto_tag = " [Auto]" if is_auto else ""
 
         if unknown_id is not None:
             self._meta_label.configure(
-                text=f"[{timestamp}] {direction} — Tanımsız Mesaj ID: {unknown_id}"
+                text=f"[{timestamp}] {direction} — Unknown Message ID: {unknown_id}"
             )
             ctk.CTkLabel(
                 self._scroll,
-                text="⚠ Tanımlı olmayan mesaj alındı",
+                text="⚠ Unknown message received",
                 font=FONT_BODY,
                 text_color=COLORS["warning"],
                 anchor="w",
@@ -93,7 +93,7 @@ class DetailPanel(ctk.CTkFrame):
             return
 
         if error_text:
-            self._meta_label.configure(text=f"[{timestamp}] {direction} — Hata")
+            self._meta_label.configure(text=f"[{timestamp}] {direction} — Error")
             ctk.CTkLabel(
                 self._scroll,
                 text=f"✕ {error_text}",

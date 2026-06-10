@@ -85,7 +85,7 @@ class Instance:
     def start_server(self, port: int) -> bool:
         self.port = port
         if self._server and self._server.start(port):
-            self.set_title(f"Sunucu :{port}")
+            self.set_title(f"Server :{port}")
             return True
         return False
 
@@ -93,7 +93,7 @@ class Instance:
         self.host = host
         self.port = port
         if self._client and self._client.connect(host, port):
-            self.set_title(f"İstemci → {host}:{port}")
+            self.set_title(f"Client → {host}:{port}")
             return True
         return False
 

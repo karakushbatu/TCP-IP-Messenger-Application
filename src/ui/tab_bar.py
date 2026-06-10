@@ -44,7 +44,7 @@ class TabBar(ctk.CTkFrame):
 
         def show_menu(event: tk.Event) -> None:
             menu = tk.Menu(widget, tearoff=0)
-            menu.add_command(label="Sekmeyi Kapat", command=lambda: self._on_close(tab_id))
+            menu.add_command(label="Close Tab", command=lambda: self._on_close(tab_id))
             try:
                 menu.tk_popup(event.x_root, event.y_root)
             finally:

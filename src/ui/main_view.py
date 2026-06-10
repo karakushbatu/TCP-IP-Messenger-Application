@@ -28,7 +28,16 @@ from src.ui.theme import (
     style_button_secondary,
     style_entry,
 )
+from src.ui.tooltip import ToolTip
 from src.utils.timestamp import format_timestamp
+
+AUTO_REPLY_TOOLTIP = (
+    "Protocol demo: incoming Message 1 triggers automatic Message 2, "
+    "and Message 2 triggers Message 1. Disable for manual testing; "
+    "loop protection prevents ping-pong cycles."
+)
+
+TOOLS_FOOTER_HEIGHT = 168
 
 
 class InstancePanel(ctk.CTkFrame):
@@ -63,7 +72,7 @@ class InstancePanel(ctk.CTkFrame):
         self.status_bar = StatusBar(top, title=title)
         self.status_bar.pack(fill="x")
 
-        self._conn_card = Card(top, title="Bağlantı Ayarları")
+        self._conn_card = Card(top, title="Connection Settings")
         self._conn_card.pack(fill="x", pady=(6, 0))
         self._conn_inner = self._conn_card.body
 
@@ -71,33 +80,25 @@ class InstancePanel(ctk.CTkFrame):
         auto_row.pack(fill="x", pady=(0, 4))
         self._auto_switch = ctk.CTkSwitch(
             auto_row,
-            text="Otomatik Yanıt",
+            text="Auto Reply",
             variable=self._auto_response_var,
             command=self._on_auto_toggle,
             progress_color=COLORS["accent_primary"],
             button_color=COLORS["text_secondary"],
             button_hover_color=COLORS["text_primary"],
         )
-        self._auto_switch.pack(anchor="w")
-        ctk.CTkLabel(
+        self._auto_switch.pack(side="left")
+        ToolTip(self._auto_switch, AUTO_REPLY_TOOLTIP)
+        info_icon = ctk.CTkLabel(
             auto_row,
-            text=(
-                "Protokol demosu: gelen Mesaj 1'e otomatik Mesaj 2, "
-                "Mesaj 2'ye otomatik Mesaj 1 yanıtı üretilir."
-            ),
+            text="ⓘ",
             font=FONT_SMALL,
             text_color=COLORS["text_tertiary"],
-            wraplength=360,
-            justify="left",
-        ).pack(anchor="w", pady=(2, 0))
-        ctk.CTkLabel(
-            auto_row,
-            text="Manuel test için kapatın; ping-pong döngüsünü önlemek için akıllı koruma vardır.",
-            font=FONT_SMALL,
-            text_color=COLORS["text_tertiary"],
-            wraplength=360,
-            justify="left",
-        ).pack(anchor="w", pady=(1, 0))
+            width=16,
+            cursor="hand2",
+        )
+        info_icon.pack(side="left", padx=(4, 0))
+        ToolTip(info_icon, AUTO_REPLY_TOOLTIP)
 
         compose_wrap = ctk.CTkFrame(self, fg_color="transparent")
         compose_wrap.grid(row=1, column=0, sticky="ew", padx=4, pady=4)
@@ -108,24 +109,32 @@ class InstancePanel(ctk.CTkFrame):
         self.message_log = MessageLog(self, on_select=self._on_select_log)
         self.message_log.grid(row=2, column=0, sticky="nsew", padx=4, pady=4)
 
+        self._tools_footer = ctk.CTkFrame(self, fg_color="transparent", height=TOOLS_FOOTER_HEIGHT)
+        self._tools_footer.grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 8))
+        self._tools_footer.grid_propagate(False)
+        self._tools_footer.grid_columnconfigure(0, weight=1)
+
         self.periodic_panel = PeriodicPanel(
-            self,
+            self._tools_footer,
             get_form_data=self._get_form_data_for_type,
             send_callback=self._send_periodic_message,
             is_connected=self._is_connected_fn,
             on_status=lambda msg: self._on_toast(msg, "warning") if self._on_toast else None,
         )
-        self.periodic_panel.grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 4))
+        self.periodic_panel.pack(fill="x", pady=(0, 2))
 
-        self._test_frame = ctk.CTkFrame(self, fg_color=COLORS["bg_secondary"], corner_radius=8)
-        self._test_frame.grid(row=4, column=0, sticky="ew", padx=4, pady=(0, 8))
+        self._test_frame = ctk.CTkFrame(
+            self._tools_footer, fg_color=COLORS["bg_secondary"], corner_radius=8
+        )
+        self._test_frame.pack(fill="x")
         self._test_expanded = False
 
-        test_header = ctk.CTkFrame(self._test_frame, fg_color="transparent")
-        test_header.pack(fill="x", padx=8, pady=(6, 4))
+        test_header = ctk.CTkFrame(self._test_frame, fg_color="transparent", height=30)
+        test_header.pack(fill="x", padx=8, pady=(4, 0))
+        test_header.pack_propagate(False)
         self._test_toggle = ctk.CTkButton(
             test_header,
-            text="▶ Test Araçları",
+            text="▶ Test Tools",
             font=FONT_SMALL,
             fg_color="transparent",
             hover_color=COLORS["bg_hover"],
@@ -140,7 +149,7 @@ class InstancePanel(ctk.CTkFrame):
 
         unknown_btn = ctk.CTkButton(
             test_row,
-            text="Tanımsız Mesaj",
+            text="Unknown Message",
             fg_color=COLORS["warning"],
             hover_color="#D97706",
             text_color=COLORS["bg_primary"],
@@ -152,7 +161,7 @@ class InstancePanel(ctk.CTkFrame):
 
         corrupt_btn = ctk.CTkButton(
             test_row,
-            text="Bozuk Mesaj",
+            text="Corrupt Message",
             fg_color=COLORS["error"],
             hover_color="#DC2626",
             text_color=COLORS["bg_primary"],
@@ -161,24 +170,18 @@ class InstancePanel(ctk.CTkFrame):
             command=self._send_corrupt,
         )
         corrupt_btn.pack(side="left")
-
-        ctk.CTkLabel(
-            self._test_body,
-            text="Tanımsız: geçersiz mesaj ID (99) gönderir · Bozuk: eksik/hatalı binary paket gönderir",
-            font=FONT_SMALL,
-            text_color=COLORS["text_tertiary"],
-            wraplength=420,
-            justify="left",
-        ).pack(anchor="w", padx=8, pady=(0, 8))
+        ToolTip(unknown_btn, "Sends undefined message ID 99")
+        ToolTip(corrupt_btn, "Sends truncated/corrupt binary packet")
+        ToolTip(self._test_toggle, "Protocol error scenario tests")
 
     def _toggle_test(self) -> None:
         self._test_expanded = not self._test_expanded
         if self._test_expanded:
             self._test_body.pack(fill="x")
-            self._test_toggle.configure(text="▼ Test Araçları")
+            self._test_toggle.configure(text="▼ Test Tools")
         else:
             self._test_body.pack_forget()
-            self._test_toggle.configure(text="▶ Test Araçları")
+            self._test_toggle.configure(text="▶ Test Tools")
 
     def set_title(self, title: str) -> None:
         self.status_bar.set_title(title)
@@ -240,15 +243,15 @@ class InstancePanel(ctk.CTkFrame):
                         on_start_server(port)
                 except ValueError:
                     if self._on_toast:
-                        self._on_toast("Geçersiz port numarası", "error")
+                        self._on_toast("Invalid port number", "error")
 
-            start_btn = ctk.CTkButton(btn_row, text="Sunucuyu Başlat", height=28, command=start)
+            start_btn = ctk.CTkButton(btn_row, text="Start Server", height=28, command=start)
             style_button_primary(start_btn)
             start_btn.pack(side="left", padx=(0, 8))
 
             if on_stop_server:
                 stop_btn = ctk.CTkButton(
-                    btn_row, text="Sunucuyu Durdur", height=28, command=on_stop_server
+                    btn_row, text="Stop Server", height=28, command=on_stop_server
                 )
                 style_button_secondary(stop_btn)
                 stop_btn.pack(side="left")
@@ -280,15 +283,15 @@ class InstancePanel(ctk.CTkFrame):
                         on_connect(ip_entry.get(), port)
                 except ValueError:
                     if self._on_toast:
-                        self._on_toast("Geçersiz port numarası", "error")
+                        self._on_toast("Invalid port number", "error")
 
-            connect_btn = ctk.CTkButton(btn_row, text="Bağlan", height=28, command=connect)
+            connect_btn = ctk.CTkButton(btn_row, text="Connect", height=28, command=connect)
             style_button_primary(connect_btn)
             connect_btn.pack(side="left", padx=(0, 8))
 
             if on_disconnect:
                 disconnect_btn = ctk.CTkButton(
-                    btn_row, text="Bağlantıyı Kes", height=28, command=on_disconnect
+                    btn_row, text="Disconnect", height=28, command=on_disconnect
                 )
                 style_button_secondary(disconnect_btn)
                 disconnect_btn.pack(side="left")
@@ -299,11 +302,11 @@ class InstancePanel(ctk.CTkFrame):
 
         if event.type == "connected":
             if self._on_toast:
-                self._on_toast("Bağlantı kuruldu", "success")
+                self._on_toast("Connected", "success")
         elif event.type == "disconnected":
             self.periodic_panel.on_disconnect()
             if self._on_toast:
-                self._on_toast("Bağlantı kesildi", "warning")
+                self._on_toast("Disconnected", "warning")
         elif event.type == "message_sent":
             info = event.payload
             if isinstance(info, SentMessageInfo):
@@ -319,7 +322,7 @@ class InstancePanel(ctk.CTkFrame):
                     )
                 )
                 if not info.is_auto and not info.is_periodic and self._on_toast:
-                    self._on_toast("Mesaj gönderildi", "success")
+                    self._on_toast("Message sent", "success")
         elif event.type == "message_received":
             info = event.payload
             if isinstance(info, ReceivedMessageInfo) and info.message:
@@ -346,7 +349,7 @@ class InstancePanel(ctk.CTkFrame):
                     )
                 )
                 if self._on_toast:
-                    self._on_toast("Tanımlı olmayan mesaj alındı", "warning")
+                    self._on_toast("Unknown message received", "warning")
         elif event.type == "protocol_error":
             info = event.payload
             if isinstance(info, ReceivedMessageInfo):
@@ -356,12 +359,12 @@ class InstancePanel(ctk.CTkFrame):
                         direction="Receive",
                         message_id=None,
                         is_error=True,
-                        error_text="Çözümlenemeyen mesaj",
+                        error_text="Unparseable message",
                         raw_timestamp=event.timestamp,
                     )
                 )
                 if self._on_toast:
-                    self._on_toast("Hatalı mesaj alındı", "error")
+                    self._on_toast("Invalid message received", "error")
 
     def _on_send(self) -> None:
         if not self.compose_form.is_valid():

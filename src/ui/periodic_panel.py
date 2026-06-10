@@ -10,8 +10,10 @@ import customtkinter as ctk
 
 from src.protocol.messages import Message
 from src.protocol.validator import build_message
-from src.ui.theme import COLORS, FONT_BODY, FONT_SMALL
+from src.ui.theme import COLORS, FONT_SMALL
 from src.utils.defaults import QUICK_FILL_MESSAGE_1, QUICK_FILL_MESSAGE_2
+
+EXPANDED_BODY_HEIGHT = 68
 
 
 class PeriodicSender:
@@ -37,16 +39,6 @@ class PeriodicSender:
 
     def set_update_callback(self, callback: Callable[[int, float], None]) -> None:
         self._on_update = callback
-
-    @property
-    def sent_count(self) -> int:
-        return self._sent_count
-
-    @property
-    def elapsed(self) -> float:
-        if self._start_time == 0:
-            return 0.0
-        return time.monotonic() - self._start_time
 
     def start(self, interval_ms: int) -> None:
         self._interval_ms = max(50, min(10000, interval_ms))
@@ -77,14 +69,17 @@ class PeriodicSender:
                     if self._send_callback(msg):
                         self._sent_count += 1
                         if self._on_update:
-                            self._on_update(self._sent_count, self.elapsed)
+                            self._on_update(
+                                self._sent_count,
+                                time.monotonic() - self._start_time,
+                            )
                 except Exception:
                     pass
             time.sleep(self._interval_ms / 1000.0)
 
 
 class PeriodicPanel(ctk.CTkFrame):
-    """Collapsible periodic sending controls."""
+    """Collapsible periodic controls — fixed height when expanded."""
 
     def __init__(
         self,
@@ -103,89 +98,85 @@ class PeriodicPanel(ctk.CTkFrame):
         self._senders: dict[int, PeriodicSender] = {}
         self._indicators: dict[int, ctk.CTkLabel] = {}
         self._counters: dict[int, ctk.CTkLabel] = {}
-        self._elapsed_labels: dict[int, ctk.CTkLabel] = {}
         self._switches: dict[int, ctk.CTkSwitch] = {}
         self._interval_entries: dict[int, ctk.CTkEntry] = {}
 
-        header_row = ctk.CTkFrame(self, fg_color="transparent")
-        header_row.pack(fill="x", padx=12, pady=(8, 4))
+        header_row = ctk.CTkFrame(self, fg_color="transparent", height=32)
+        header_row.pack(fill="x", padx=8, pady=(4, 0))
+        header_row.pack_propagate(False)
 
         self._toggle_btn = ctk.CTkButton(
             header_row,
-            text="▶ Periyodik Gönderim",
-            font=("Segoe UI", 14, "bold"),
+            text="▶ Periodic Send",
+            font=FONT_SMALL,
             fg_color="transparent",
             hover_color=COLORS["bg_hover"],
             anchor="w",
             command=self._toggle,
         )
-        self._toggle_btn.pack(side="left")
+        self._toggle_btn.pack(side="left", fill="y")
 
-        stop_all = ctk.CTkButton(
+        ctk.CTkButton(
             header_row,
-            text="Tümünü Durdur",
-            width=120,
+            text="Stop All",
+            width=64,
+            height=24,
+            font=FONT_SMALL,
             fg_color=COLORS["bg_tertiary"],
             hover_color=COLORS["bg_hover"],
             command=self.stop_all,
+        ).pack(side="right", pady=4)
+
+        self._body = ctk.CTkFrame(
+            self,
+            fg_color="transparent",
+            height=EXPANDED_BODY_HEIGHT,
         )
-        stop_all.pack(side="right")
+        self._body.pack_propagate(False)
 
-        self._content = ctk.CTkFrame(self, fg_color="transparent")
-
-        ctk.CTkLabel(
-            self._content,
-            text="Bağlantı kurulduktan sonra anahtarı açın. Toast bildirimi gösterilmez.",
-            font=FONT_SMALL,
-            text_color=COLORS["text_tertiary"],
-            anchor="w",
-        ).pack(fill="x", pady=(0, 6))
+        inner = ctk.CTkFrame(self._body, fg_color="transparent")
+        inner.pack(fill="both", expand=True, padx=8, pady=(0, 4))
 
         for msg_id, default_ms in [(1, 100), (2, 500)]:
-            self._build_row(msg_id, default_ms)
+            self._build_row(inner, msg_id, default_ms)
 
-    def _build_row(self, msg_id: int, default_ms: int) -> None:
-        row = ctk.CTkFrame(self._content, fg_color=COLORS["bg_tertiary"], corner_radius=6)
-        row.pack(fill="x", pady=3)
+    def _build_row(self, parent: ctk.CTkFrame, msg_id: int, default_ms: int) -> None:
+        row = ctk.CTkFrame(parent, fg_color=COLORS["bg_tertiary"], corner_radius=4, height=28)
+        row.pack(fill="x", pady=2)
+        row.pack_propagate(False)
 
-        indicator = ctk.CTkLabel(row, text="●", font=FONT_BODY, text_color=COLORS["text_tertiary"])
-        indicator.pack(side="left", padx=(8, 4))
+        indicator = ctk.CTkLabel(
+            row, text="●", font=FONT_SMALL, text_color=COLORS["text_tertiary"], width=12
+        )
+        indicator.pack(side="left", padx=(6, 2))
 
         ctk.CTkLabel(
             row,
-            text=f"Mesaj {msg_id}",
-            font=FONT_BODY,
+            text=f"M{msg_id}",
+            font=FONT_SMALL,
             text_color=COLORS["text_primary"],
-            width=70,
+            width=24,
         ).pack(side="left")
 
         switch = ctk.CTkSwitch(
             row,
             text="",
-            width=40,
+            width=36,
             command=lambda mid=msg_id: self.after_idle(lambda: self._on_toggle(mid)),
         )
-        switch.pack(side="left", padx=4)
+        switch.pack(side="left", padx=2)
 
         ctk.CTkLabel(
-            row,
-            text="Aralık (ms):",
-            font=FONT_SMALL,
-            text_color=COLORS["text_secondary"],
-        ).pack(side="left", padx=(8, 2))
-        entry = ctk.CTkEntry(row, width=70)
+            row, text="ms", font=FONT_SMALL, text_color=COLORS["text_tertiary"], width=18
+        ).pack(side="left")
+        entry = ctk.CTkEntry(row, width=52, height=22)
         entry.insert(0, str(default_ms))
-        entry.pack(side="left")
+        entry.pack(side="left", padx=(0, 6))
 
         counter = ctk.CTkLabel(
-            row, text="Gönderilen: 0", font=FONT_SMALL, text_color=COLORS["text_secondary"]
+            row, text="0 sent", font=FONT_SMALL, text_color=COLORS["text_secondary"]
         )
-        counter.pack(side="left", padx=(12, 4))
-
-        elapsed = ctk.CTkLabel(
-            row, text="Süre: 0.0s", font=FONT_SMALL, text_color=COLORS["text_tertiary"]
-        )
-        elapsed.pack(side="left")
+        counter.pack(side="left")
 
         sender = PeriodicSender(
             msg_id,
@@ -193,32 +184,24 @@ class PeriodicPanel(ctk.CTkFrame):
             self._send_callback,
             lambda: self._is_connected(),
         )
-
-        def update(count: int, elapsed_s: float, mid: int = msg_id) -> None:
-            self.after(0, lambda: self._update_ui(mid, count, elapsed_s))
-
-        sender.set_update_callback(update)
+        sender.set_update_callback(
+            lambda c, _e, mid=msg_id: self.after(0, lambda: counter.configure(text=f"{c} sent"))
+        )
 
         self._senders[msg_id] = sender
         self._indicators[msg_id] = indicator
         self._counters[msg_id] = counter
-        self._elapsed_labels[msg_id] = elapsed
         self._switches[msg_id] = switch
         self._interval_entries[msg_id] = entry
-
-    def _update_ui(self, msg_id: int, count: int, elapsed_s: float) -> None:
-        self._counters[msg_id].configure(text=f"Gönderilen: {count}")
-        self._elapsed_labels[msg_id].configure(text=f"Süre: {elapsed_s:.1f}s")
 
     def _on_toggle(self, msg_id: int) -> None:
         switch = self._switches[msg_id]
         sender = self._senders[msg_id]
-        enabled = int(switch.get()) == 1
-        if enabled:
+        if int(switch.get()) == 1:
             if not self._is_connected():
                 switch.deselect()
                 if self._on_status:
-                    self._on_status("Periyodik gönderim için önce bağlantı kurun")
+                    self._on_status("Connect first to enable periodic sending")
                 return
             try:
                 interval = int(self._interval_entries[msg_id].get())
@@ -242,8 +225,8 @@ class PeriodicPanel(ctk.CTkFrame):
     def _toggle(self) -> None:
         self._expanded = not self._expanded
         if self._expanded:
-            self._content.pack(fill="x", padx=12, pady=(0, 8))
-            self._toggle_btn.configure(text="▼ Periyodik Gönderim")
+            self._body.pack(fill="x")
+            self._toggle_btn.configure(text="▼ Periodic Send")
         else:
-            self._content.pack_forget()
-            self._toggle_btn.configure(text="▶ Periyodik Gönderim")
+            self._body.pack_forget()
+            self._toggle_btn.configure(text="▶ Periodic Send")

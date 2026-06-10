@@ -6,6 +6,7 @@ from typing import Callable
 
 import customtkinter as ctk
 
+from src.app_info import APP_NAME, APP_TAGLINE
 from src.instance_manager import DemoMode
 from src.ui.theme import (
     COLORS,
@@ -22,7 +23,7 @@ DemoCallback = Callable[[DemoMode], None]
 
 
 class WelcomeScreen(ctk.CTkScrollableFrame):
-    """Initial welcome screen — scrollable, no overlap with other panels."""
+    """Initial welcome screen."""
 
     def __init__(self, master: ctk.CTkBaseClass, on_select: DemoCallback) -> None:
         super().__init__(
@@ -36,17 +37,16 @@ class WelcomeScreen(ctk.CTkScrollableFrame):
         inner = ctk.CTkFrame(self, fg_color="transparent")
         inner.pack(fill="both", expand=True, padx=24, pady=24)
 
-        # Hero
         ctk.CTkLabel(
             inner,
-            text="TCP Tactical Messenger",
+            text=APP_NAME,
             font=FONT_DISPLAY,
             text_color=COLORS["text_primary"],
         ).pack(pady=(12, 4))
 
         ctk.CTkLabel(
             inner,
-            text="TCP/IP Binary Messaging Platform",
+            text=APP_TAGLINE,
             font=FONT_SMALL,
             text_color=COLORS["accent_primary"],
         ).pack(pady=(0, 8))
@@ -54,8 +54,8 @@ class WelcomeScreen(ctk.CTkScrollableFrame):
         ctk.CTkLabel(
             inner,
             text=(
-                "TCP/IP üzerinden ikili mesajlaşma, otomatik yanıt "
-                "ve periyodik gönderim demo aracı"
+                "Binary messaging over TCP/IP with auto-response "
+                "and periodic transmission demo."
             ),
             font=FONT_BODY,
             text_color=COLORS["text_secondary"],
@@ -65,8 +65,8 @@ class WelcomeScreen(ctk.CTkScrollableFrame):
         ctk.CTkLabel(
             inner,
             text=(
-                "Başlamak için bir mod seçin. Sunucu + İstemci modunda iki panel "
-                "yan yana açılır; tek taraflı modlarda yalnızca ilgili panel görünür."
+                "Pick a mode to begin. Server + Client opens two side-by-side panels; "
+                "single-side modes show one panel only."
             ),
             font=FONT_SMALL,
             text_color=COLORS["text_tertiary"],
@@ -80,34 +80,34 @@ class WelcomeScreen(ctk.CTkScrollableFrame):
 
         demos: list[tuple[str, str, str, DemoMode, str]] = [
             (
-                "Sunucu + İstemci (Otomatik Bağlan)",
-                "Önerilen demo modu",
-                "Sunucu :8080'de otomatik başlar, istemci kendiliğinden bağlanır. "
-                "Hemen mesaj göndermeye başlayabilirsiniz.",
+                "Server + Client (Auto Connect)",
+                "Recommended demo",
+                "Server starts on :8080 and the client connects automatically. "
+                "Start sending messages immediately.",
                 "auto",
-                "Önerilen",
+                "Recommended",
             ),
             (
-                "Sunucu + İstemci (Manuel)",
-                "Adım adım bağlantı",
-                "Her iki panel açılır ama bağlantı kurulmaz. Önce sol panelden "
-                "«Sunucuyu Başlat», ardından sağ panelden «Bağlan» demelisiniz.",
+                "Server + Client (Manual)",
+                "Step-by-step connection",
+                "Both panels open without a connection. Start the server on the left, "
+                "then click Connect on the right.",
                 "manual",
-                "Manuel",
+                "Manual",
             ),
             (
-                "Tek Sunucu",
-                "Yalnızca dinleme",
-                "Başka bir uygulama veya ikinci penceredeki istemci bu sunucuya bağlanır.",
+                "Server Only",
+                "Listen only",
+                "Another app or instance tab connects to this server.",
                 "server_only",
-                "Sunucu",
+                "Server",
             ),
             (
-                "Tek İstemci",
-                "Yalnızca bağlanma",
-                "Harici bir sunucunun IP ve portuna bağlanmak için kullanın.",
+                "Client Only",
+                "Connect only",
+                "Connect to an external server by IP and port.",
                 "client_only",
-                "İstemci",
+                "Client",
             ),
         ]
 
@@ -176,7 +176,7 @@ class WelcomeScreen(ctk.CTkScrollableFrame):
 
         btn = ctk.CTkButton(
             card,
-            text="Başlat →",
+            text="Start →",
             width=120,
             command=lambda m=mode: self._on_select(m),
         )
