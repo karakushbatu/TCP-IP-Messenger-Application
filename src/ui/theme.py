@@ -1,5 +1,7 @@
 """Design tokens and theme configuration."""
 
+import sys
+
 import customtkinter as ctk
 
 COLORS = {
@@ -48,11 +50,26 @@ FONT_SMALL = ("Segoe UI", 11)
 FONT_MONO = ("Cascadia Mono", 12)
 FONT_MONO_SMALL = ("Cascadia Mono", 11)
 
+# Layout tokens tuned for MacBook Retina viewports (dual-panel workspace).
+COMPOSE_SCROLL_HEIGHT = 150 if sys.platform == "darwin" else 210
+DETAIL_PANEL_HEIGHT = 108 if sys.platform == "darwin" else 140
+COMPACT_WIDTH = 520
+
+
+def platform_ui_scale() -> float:
+    """CustomTkinter defaults to 2.0 on Retina Mac — too large for laptop layouts."""
+    if sys.platform == "darwin":
+        return 0.88
+    return 1.0
+
 
 def apply_theme() -> None:
     """Apply global CustomTkinter theme settings."""
     ctk.set_appearance_mode("dark")
     ctk.set_default_color_theme("dark-blue")
+    scale = platform_ui_scale()
+    ctk.set_widget_scaling(scale)
+    ctk.set_window_scaling(scale)
 
 
 def style_button_primary(button: ctk.CTkButton) -> None:

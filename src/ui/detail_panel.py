@@ -5,9 +5,15 @@ from __future__ import annotations
 import customtkinter as ctk
 
 from src.protocol.messages import Message, get_message_short_label, message_to_dict
-from src.ui.theme import COLORS, FONT_BODY, FONT_HEADING, FONT_MONO, FONT_SMALL, RADIUS
-
-DETAIL_PANEL_HEIGHT = 160
+from src.ui.theme import (
+    COLORS,
+    DETAIL_PANEL_HEIGHT,
+    FONT_BODY,
+    FONT_HEADING,
+    FONT_MONO,
+    FONT_SMALL,
+    RADIUS,
+)
 
 
 class DetailPanel(ctk.CTkFrame):

@@ -16,6 +16,8 @@ from src.protocol.validator import ValidationError, validate_message
 from src.ui.components import Card, SegmentedControl
 from src.ui.theme import (
     COLORS,
+    COMPACT_WIDTH,
+    COMPOSE_SCROLL_HEIGHT,
     FONT_SMALL,
     RADIUS,
     style_button_primary,
@@ -27,11 +29,11 @@ from src.utils.defaults import QUICK_FILL_MESSAGE_1, QUICK_FILL_MESSAGE_2
 
 
 class ComposeForm(Card):
-    """Two-column compose form — all fields visible without scroll."""
+    """Compose form with scrollable fields; single column on narrow panels."""
 
-    LABEL_WIDTH = 118
-    FIELD_WIDTH = 112
-    COL_GAP = 16
+    LABEL_WIDTH = 108
+    FIELD_WIDTH = 104
+    COL_GAP = 12
 
     def __init__(
         self,
@@ -39,7 +41,7 @@ class ComposeForm(Card):
         on_validation_change: Callable[[bool], None] | None = None,
     ) -> None:
         super().__init__(master, title="Compose Message", subtitle="Binary message builder")
-        self.body.pack_configure(padx=10, pady=(2, 8))
+        self.body.pack_configure(padx=8, pady=(2, 6))
         self._on_validation_change = on_validation_change
         self._message_id = 1
         self._fields: dict[str, ctk.CTkBaseClass] = {}
@@ -47,6 +49,7 @@ class ComposeForm(Card):
         self._byte_counters: dict[str, ctk.CTkLabel] = {}
         self._validation_errors: list[ValidationError] = []
         self._tooltips: list[ToolTip] = []
+        self._compact: bool | None = None
 
         self._segment = SegmentedControl(
             self.body,
@@ -54,35 +57,55 @@ class ComposeForm(Card):
             on_change=self._switch_type,
             initial=1,
         )
-        self._segment.pack(anchor="w", pady=(0, 6))
+        self._segment.pack(anchor="w", pady=(0, 4))
 
-        self._grid_wrap = ctk.CTkFrame(
+        self._fields_scroll = ctk.CTkScrollableFrame(
             self.body,
             fg_color=COLORS["bg_input"],
             corner_radius=RADIUS["sm"],
+            height=COMPOSE_SCROLL_HEIGHT,
+            scrollbar_button_color=COLORS["bg_elevated"],
+            scrollbar_button_hover_color=COLORS["bg_hover"],
         )
-        self._grid_wrap.pack(fill="x", pady=(0, 6))
-        self._fields_frame = ctk.CTkFrame(self._grid_wrap, fg_color="transparent")
-        self._fields_frame.pack(fill="x", padx=8, pady=8)
+        self._fields_scroll.pack(fill="x", pady=(0, 4))
+        self._fields_scroll.pack_propagate(False)
+
+        self._fields_frame = ctk.CTkFrame(self._fields_scroll, fg_color="transparent")
+        self._fields_frame.pack(fill="x", padx=6, pady=6)
 
         btn_frame = ctk.CTkFrame(self.body, fg_color="transparent")
-        btn_frame.pack(fill="x")
+        btn_frame.pack(fill="x", pady=(2, 0))
 
         self._quick_fill_btn = ctk.CTkButton(
-            btn_frame, text="Quick Fill", height=28, command=self._quick_fill
+            btn_frame, text="Quick Fill", height=26, command=self._quick_fill
         )
         style_button_secondary(self._quick_fill_btn)
         self._quick_fill_btn.pack(side="left", padx=(0, 8))
 
         self._send_btn = ctk.CTkButton(
-            btn_frame, text="Send", height=28, state="disabled", command=lambda: None
+            btn_frame, text="Send", height=26, state="disabled", command=lambda: None
         )
         style_button_primary(self._send_btn)
         self._send_btn.pack(side="left")
 
+        self.bind("<Configure>", self._on_resize, add="+")
         self._build_fields()
         self._quick_fill()
         self._validate()
+
+    def _on_resize(self, event: object) -> None:
+        widget = getattr(event, "widget", None)
+        if widget is not self:
+            return
+        width = self.winfo_width()
+        if width <= 1:
+            return
+        compact = width < COMPACT_WIDTH
+        if compact != self._compact:
+            self._compact = compact
+            self._build_fields()
+            self._quick_fill()
+            self._validate()
 
     def set_send_callback(self, callback: Callable[[], None]) -> None:
         self._send_btn.configure(command=callback)
@@ -207,6 +230,17 @@ class ComposeForm(Card):
         self._tooltips.clear()
 
         definitions = MESSAGE_DEFINITIONS[self._message_id]
+        if self._compact is None:
+            self._compact = self.winfo_width() < COMPACT_WIDTH if self.winfo_width() > 1 else True
+
+        if self._compact:
+            single = ctk.CTkFrame(self._fields_frame, fg_color="transparent")
+            single.pack(fill="x")
+            single.grid_columnconfigure(1, weight=0)
+            for idx, field_def in enumerate(definitions):
+                self._place_field(single, field_def, idx)
+            return
+
         half = (len(definitions) + 1) // 2
 
         left = ctk.CTkFrame(self._fields_frame, fg_color="transparent")

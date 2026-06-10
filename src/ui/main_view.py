@@ -37,9 +37,6 @@ AUTO_REPLY_TOOLTIP = (
     "loop protection prevents ping-pong cycles."
 )
 
-TOOLS_FOOTER_HEIGHT = 168
-
-
 class InstancePanel(ctk.CTkFrame):
     """Reusable per-instance UI panel for server or client."""
 
@@ -57,7 +54,7 @@ class InstancePanel(ctk.CTkFrame):
             border_color=COLORS["border_subtle"],
             border_width=1,
         )
-        self.grid_rowconfigure(2, weight=1, minsize=200)
+        self.grid_rowconfigure(2, weight=1, minsize=72)
         self.grid_columnconfigure(0, weight=1)
         self._on_log_select = on_log_select
         self._on_toast = on_toast
@@ -111,9 +108,8 @@ class InstancePanel(ctk.CTkFrame):
         self.message_log = MessageLog(self, on_select=self._on_select_log)
         self.message_log.grid(row=2, column=0, sticky="nsew", padx=4, pady=4)
 
-        self._tools_footer = ctk.CTkFrame(self, fg_color="transparent", height=TOOLS_FOOTER_HEIGHT)
-        self._tools_footer.grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 8))
-        self._tools_footer.grid_propagate(False)
+        self._tools_footer = ctk.CTkFrame(self, fg_color="transparent")
+        self._tools_footer.grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 6))
         self._tools_footer.grid_columnconfigure(0, weight=1)
 
         self.periodic_panel = PeriodicPanel(
